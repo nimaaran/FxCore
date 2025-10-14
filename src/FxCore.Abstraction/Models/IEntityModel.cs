@@ -1,12 +1,31 @@
-﻿namespace FxCore.Abstraction.Models;
+﻿// ┌──────────────────────────────────────────────────────────────────────────────────────────────┐
+// │ALL RIGHTS RESERVED.                                                                          │
+// │THIS FILE IS PART OF FXCORE FRAMEWORK AND DEVELOPED BY NIMA ARAN AND FXCORE CONTRIBUTORS TEAM.│
+// │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
+// └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
+namespace FxCore.Abstraction.Models;
+
+/// <summary>
+/// Defines a contract for defining entity models.
+/// </summary>
 public interface IEntityModel : IDataModel
 {
+    /// <summary>
+    /// Gets a value indicating whether the entity object is removed or not.
+    /// </summary>
     bool Removed { get; }
 }
 
+/// <summary>
+/// Defines a contract for defining entity models.
+/// </summary>
+/// <typeparam name="TId">Type of the entity id.</typeparam>
 public interface IEntityModel<TId> : IEntityModel
     where TId : notnull
 {
+    /// <summary>
+    /// Gets the entity id.
+    /// </summary>
     TId Id { get; }
 }

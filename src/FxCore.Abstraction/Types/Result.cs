@@ -7,12 +7,12 @@ public sealed class Result
     private Result(ResultStates state, ResultCodes code,  string message, object? outcome = null)
     {
         this.State = state;
-        this.Codes = code;
+        this.Code = code;
         this.Message = message;
         this.outcome = outcome;
     }
 
-    public ResultCodes Codes { get; }
+    public ResultCodes Code { get; }
     public ResultStates State { get; }
     public bool HasOutcome { get => this.outcome is not null; }
     public string Message { get; } = string.Empty;

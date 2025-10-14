@@ -2,7 +2,7 @@
 
 namespace FxCore.Abstraction.Models;
 
-internal interface IEventDrivenRootModel : IAggregateRootModel
+public interface IEventDrivenRootModel : IAggregateRootModel
 {
     IReadOnlyCollection<IDomainEventModel> UncommittedEvents { get; }
 

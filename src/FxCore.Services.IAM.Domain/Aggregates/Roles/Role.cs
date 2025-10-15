@@ -1,4 +1,10 @@
-﻿using FxCore.Abstraction.Models;
+﻿// ┌──────────────────────────────────────────────────────────────────────────────────────────────┐
+// │ALL RIGHTS RESERVED.                                                                          │
+// │THIS FILE IS PART OF FXCORE FRAMEWORK AND DEVELOPED BY NIMA ARAN AND FXCORE CONTRIBUTORS TEAM.│
+// │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
+// └──────────────────────────────────────────────────────────────────────────────────────────────┘
+
+using FxCore.Abstraction.Models;
 using FxCore.Abstraction.Services;
 using FxCore.Abstraction.Types;
 using FxCore.Services.IAM.Domain.Services;
@@ -6,21 +12,26 @@ using FxCore.Services.IAM.Shared.Roles;
 
 namespace FxCore.Services.IAM.Domain.Aggregates.Roles;
 
+/// <summary>
+/// Defines an aggregate root for the roles aggregate.
+/// </summary>
 public sealed class Role : EventDrivenRootBase<long, RoleKey>
 {
-    private Role() : base(
-        id: default,
-        key: new RoleKey(string.Empty),
-        removed: false,
-        @lock: AggregateLock.Empty)
+    private Role()
+        : base(
+            id: default,
+            key: new RoleKey(string.Empty),
+            removed: false,
+            @lock: AggregateLock.Empty)
     {
     }
 
-    private Role(RoleKey roleKey, AggregateLock @lock) : base(
-        id: default,
-        key: roleKey,
-        removed: false,
-        @lock: @lock)
+    private Role(RoleKey roleKey, AggregateLock @lock)
+        : base(
+            id: default,
+            key: roleKey,
+            removed: false,
+            @lock: @lock)
     {
     }
 
@@ -29,40 +40,69 @@ public sealed class Role : EventDrivenRootBase<long, RoleKey>
         ITrackingKeyGenerator trackingKeyGenerator,
         IRoleKeyGenerator roleKeyGenerator,
         string title,
-        bool twoFactorRequired,
+        bool isSensitive,
         RoleTypes type,
-        out Result result) : this(
+        out Result result)
+        : this(
             roleKey: roleKeyGenerator.Generate(),
             @lock: AggregateLock.Create(dateTimeService.Now()))
     {
         var @event = new RoleDefined(
             TrackingKey: trackingKeyGenerator.Generate(),
             Timestamp: this.Lock.Timestamp,
-            RoleKey: this.Key,
-            RoleTitle: title,
-            TwoFactorRequired: twoFactorRequired,
-            RoleType: type,
-            RoleState: RoleStates.ENABLED);
+            Key: this.Key,
+            Title: title,
+            IsSensitive: isSensitive,
+            Type: type,
+            State: RoleStates.ENABLED);
 
         result = this.ApplyEvent(@event: @event, isNew: true);
     }
 
+    /// <summary>
+    /// Gets the role title.
+    /// </summary>
     public string Title { get; private set; } = string.Empty;
-    public bool TwoFactorRequired { get; private set; } = false;
+
+    /// <summary>
+    /// Gets a value indicating whether the role is sensitive or not. For example we can enforce
+    /// two-factor authentication for using sensitive roles.
+    /// </summary>
+    public bool IsSensitive { get; private set; } = false;
+
+    /// <summary>
+    /// Gets the role type.
+    /// </summary>
     public RoleTypes Type { get; private set; } = RoleTypes.USER_DEFINED;
+
+    /// <summary>
+    /// Gets the role state.
+    /// </summary>
     public RoleStates State { get; private set; } = RoleStates.DISABLED;
 
+    /// <summary>
+    /// Defines a new role.
+    /// </summary>
+    /// <param name="dateTimeService">A date and time service provider.</param>
+    /// <param name="trackingKeyGenerator">A tracking key generator service provider.</param>
+    /// <param name="roleKeyGenerator">A role key generator service.</param>
+    /// <param name="roleTitle">The role title.</param>
+    /// <param name="isSensitive">
+    ///     A value indicating whether the role is sensitive or not.
+    /// </param>
+    /// <param name="roleType">The role type.</param>
+    /// <returns>An object as type of the <see cref="Result"/>.</returns>
     public static Result Define(
         IDateTimeService dateTimeService,
         ITrackingKeyGenerator trackingKeyGenerator,
-        IRoleKeyGenerator aggregateKeyGenerator,
+        IRoleKeyGenerator roleKeyGenerator,
         string roleTitle,
-        bool twoFactorRequired,
+        bool isSensitive,
         RoleTypes roleType)
     {
         if (dateTimeService is null ||
             trackingKeyGenerator is null ||
-            aggregateKeyGenerator is null ||
+            roleKeyGenerator is null ||
             string.IsNullOrWhiteSpace(roleTitle))
         {
             return Result.Terminated(ResultCodes.BAD_REQUEST);
@@ -71,15 +111,21 @@ public sealed class Role : EventDrivenRootBase<long, RoleKey>
         _ = new Role(
                 dateTimeService,
                 trackingKeyGenerator,
-                aggregateKeyGenerator,
+                roleKeyGenerator,
                 roleTitle,
-                twoFactorRequired,
+                isSensitive,
                 roleType,
                 out Result result);
 
         return result;
     }
 
+    /// <summary>
+    /// Enables the role.
+    /// </summary>
+    /// <param name="dateTimeService">A date and time service provider.</param>
+    /// <param name="trackingKeyGenerator">A tracking key generator service provider.</param>
+    /// <returns>An object as type of the <see cref="Result"/>.</returns>
     public Result Enable(IDateTimeService dateTimeService, ITrackingKeyGenerator trackingKeyGenerator)
     {
         if (dateTimeService is null ||
@@ -91,12 +137,20 @@ public sealed class Role : EventDrivenRootBase<long, RoleKey>
         var @event = new RoleEnabled(
             TrackingKey: trackingKeyGenerator.Generate(),
             Timestamp: dateTimeService.Now(),
-            RoleKey: this.Key);
+            Key: this.Key);
 
         return this.ApplyEvent(@event: @event, isNew: true);
     }
 
-    public Result Disable(IDateTimeService dateTimeService, ITrackingKeyGenerator trackingKeyGenerator)
+    /// <summary>
+    /// Disables the role.
+    /// </summary>
+    /// <param name="dateTimeService">A date and time service provider.</param>
+    /// <param name="trackingKeyGenerator">A tracking key generator service provider.</param>
+    /// <returns>An object as type of the <see cref="Result"/>.</returns>
+    public Result Disable(
+        IDateTimeService dateTimeService,
+        ITrackingKeyGenerator trackingKeyGenerator)
     {
         if (dateTimeService is null ||
             trackingKeyGenerator is null)
@@ -107,12 +161,20 @@ public sealed class Role : EventDrivenRootBase<long, RoleKey>
         var @event = new RoleDisabled(
             TrackingKey: trackingKeyGenerator.Generate(),
             Timestamp: dateTimeService.Now(),
-            RoleKey: this.Key);
+            Key: this.Key);
 
         return this.ApplyEvent(@event: @event, isNew: true);
     }
 
-    public Result Remove(IDateTimeService dateTimeService, ITrackingKeyGenerator trackingKeyGenerator)
+    /// <summary>
+    /// Removes the role.
+    /// </summary>
+    /// <param name="dateTimeService">A date and time service provider.</param>
+    /// <param name="trackingKeyGenerator">A tracking key generator service provider.</param>
+    /// <returns>An object as type of the <see cref="Result"/>.</returns>
+    public Result Remove(
+        IDateTimeService dateTimeService,
+        ITrackingKeyGenerator trackingKeyGenerator)
     {
         if (dateTimeService is null ||
             trackingKeyGenerator is null)
@@ -123,12 +185,20 @@ public sealed class Role : EventDrivenRootBase<long, RoleKey>
         var @event = new RoleRemoved(
             TrackingKey: trackingKeyGenerator.Generate(),
             Timestamp: dateTimeService.Now(),
-            RoleKey: this.Key);
+            Key: this.Key);
 
         return this.ApplyEvent(@event: @event, isNew: true);
     }
 
-    public Result SetTwoFactor(IDateTimeService dateTimeService, ITrackingKeyGenerator trackingKeyGenerator)
+    /// <summary>
+    /// Sets the <see cref="IsSensitive"/> flag.
+    /// </summary>
+    /// <param name="dateTimeService">A date and time service provider.</param>
+    /// <param name="trackingKeyGenerator">A tracking key generator service provider.</param>
+    /// <returns>An object as type of the <see cref="Result"/>.</returns>
+    public Result SetSensitivity(
+        IDateTimeService dateTimeService,
+        ITrackingKeyGenerator trackingKeyGenerator)
     {
         if (dateTimeService is null ||
             trackingKeyGenerator is null)
@@ -136,15 +206,23 @@ public sealed class Role : EventDrivenRootBase<long, RoleKey>
             return Result.Terminated(ResultCodes.BAD_REQUEST);
         }
 
-        var @event = new TwoFactorSet(
+        var @event = new SensitivityFlagSet(
             TrackingKey: trackingKeyGenerator.Generate(),
             Timestamp: dateTimeService.Now(),
-            RoleKey: this.Key);
+            Key: this.Key);
 
         return this.ApplyEvent(@event: @event, isNew: true);
     }
 
-    public Result UnsetTwoFactor(IDateTimeService dateTimeService, ITrackingKeyGenerator trackingKeyGenerator)
+    /// <summary>
+    /// unsets the <see cref="IsSensitive"/> flag.
+    /// </summary>
+    /// <param name="dateTimeService">A date and time service provider.</param>
+    /// <param name="trackingKeyGenerator">A tracking key generator service provider.</param>
+    /// <returns>An object as type of the <see cref="Result"/>.</returns>
+    public Result UnsetSensitivity(
+        IDateTimeService dateTimeService,
+        ITrackingKeyGenerator trackingKeyGenerator)
     {
         if (dateTimeService is null ||
             trackingKeyGenerator is null)
@@ -152,24 +230,25 @@ public sealed class Role : EventDrivenRootBase<long, RoleKey>
             return Result.Terminated(ResultCodes.BAD_REQUEST);
         }
 
-        var @event = new TwoFactorUnset(
+        var @event = new SensitivityFlagUnset(
             TrackingKey: trackingKeyGenerator.Generate(),
             Timestamp: dateTimeService.Now(),
-            RoleKey: this.Key);
+            Key: this.Key);
 
         return this.ApplyEvent(@event: @event, isNew: true);
     }
 
+    /// <inheritdoc/>
     protected override Result DispatchEvent(IDomainEventModel @event)
     {
         var result = @event switch
         {
             RoleDefined e => this.OnRoleDefined(e),
-            RoleEnabled e => this.OnRoleEnabled(e),
-            RoleRemoved e => this.OnRoleRemoved(e),
-            RoleDisabled e => this.OnRoleDisabled(e),
-            TwoFactorSet e => this.OnTwoFactorSet(e),
-            TwoFactorUnset e => this.OnTwoFactorUnset(e),
+            RoleEnabled _ => this.OnRoleEnabled(),
+            RoleRemoved _ => this.OnRoleRemoved(),
+            RoleDisabled _ => this.OnRoleDisabled(),
+            SensitivityFlagSet _ => this.OnSensitivityFlagSet(),
+            SensitivityFlagUnset _ => this.OnSensitivityFlagUnset(),
 
             _ => base.DispatchEvent(@event),
         };
@@ -179,15 +258,15 @@ public sealed class Role : EventDrivenRootBase<long, RoleKey>
 
     private Result OnRoleDefined(RoleDefined @event)
     {
-        this.Title = @event.RoleTitle;
-        this.TwoFactorRequired = @event.TwoFactorRequired;
-        this.Type = @event.RoleType;
-        this.State = @event.RoleState;
+        this.Title = @event.Title;
+        this.IsSensitive = @event.IsSensitive;
+        this.Type = @event.Type;
+        this.State = @event.State;
 
         return Result.Completed(this.Key);
     }
 
-    private Result OnRoleEnabled(RoleEnabled _)
+    private Result OnRoleEnabled()
     {
         if (this.Removed)
         {
@@ -203,7 +282,7 @@ public sealed class Role : EventDrivenRootBase<long, RoleKey>
         return Result.Completed();
     }
 
-    private Result OnRoleDisabled(RoleDisabled _)
+    private Result OnRoleDisabled()
     {
         if (this.Removed)
         {
@@ -223,7 +302,7 @@ public sealed class Role : EventDrivenRootBase<long, RoleKey>
         return Result.Completed();
     }
 
-    private Result OnRoleRemoved(RoleRemoved _)
+    private Result OnRoleRemoved()
     {
         if (this.Removed)
         {
@@ -237,34 +316,34 @@ public sealed class Role : EventDrivenRootBase<long, RoleKey>
         return this.Remove();
     }
 
-    private Result OnTwoFactorSet(TwoFactorSet _)
+    private Result OnSensitivityFlagSet()
     {
         if (this.Removed)
         {
             return Result.Terminated(ResultCodes.ARCHIVED);
         }
-        else if (this.TwoFactorRequired)
+        else if (this.IsSensitive)
         {
             return Result.Terminated(ResultCodes.NOT_MODIFIED);
         }
 
-        this.TwoFactorRequired = true;
+        this.IsSensitive = true;
 
         return Result.Completed();
     }
 
-    private Result OnTwoFactorUnset(TwoFactorUnset _)
+    private Result OnSensitivityFlagUnset()
     {
         if (this.Removed)
         {
             return Result.Terminated(ResultCodes.ARCHIVED);
         }
-        else if (!this.TwoFactorRequired)
+        else if (!this.IsSensitive)
         {
             return Result.Terminated(ResultCodes.NOT_MODIFIED);
         }
 
-        this.TwoFactorRequired = false;
+        this.IsSensitive = false;
 
         return Result.Completed();
     }

@@ -4,13 +4,19 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Abstraction.Services;
-using FxCore.Services.IAM.Domain.Aggregates.Roles;
+using FxCore.Abstraction.Models;
 using FxCore.Services.IAM.Shared.Roles;
 
-namespace FxCore.Services.IAM.Domain.Services;
+namespace FxCore.Services.IAM.Domain.Aggregates.Roles;
 
 /// <summary>
-/// Defines a contract for role key generators.
+/// Defines a domain event model for when a sensitivity flag is unset on a role.
 /// </summary>
-public interface IRoleKeyGenerator : IAggregateKeyGenerator<Role, RoleKey>;
+/// <param name="TrackingKey">The event tracking key.</param>
+/// <param name="Timestamp">The event timestamp.</param>
+/// <param name="Key">The role aggregate key.</param>
+public sealed record class SensitivityFlagUnset(
+    string TrackingKey,
+    DateTimeOffset Timestamp,
+    RoleKey Key)
+    : IDomainEventModel;

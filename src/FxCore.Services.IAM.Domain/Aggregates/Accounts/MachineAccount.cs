@@ -8,6 +8,7 @@ using FxCore.Abstraction.Services;
 using FxCore.Abstraction.Types;
 using FxCore.Services.IAM.Domain.Services;
 using FxCore.Services.IAM.Shared.Accounts;
+using FxCore.Services.IAM.Shared.Passports;
 using FxCore.Services.IAM.Shared.Roles;
 
 namespace FxCore.Services.IAM.Domain.Aggregates.Accounts;
@@ -23,14 +24,12 @@ public sealed class MachineAccount : Account<MachineAccount>
     }
 
     private MachineAccount(
-        IDateTimeService dateTimeService,
-        ITrackingKeyGenerator trackingKeyGenerator,
+        IEventDependenciesProvider dependencies,
         IMachineAccountKeyGenerator machineAccountKeyGenerator,
         string displayName,
         out Result result)
         : base(
-            dateTimeService,
-            trackingKeyGenerator,
+            dependencies,
             machineAccountKeyGenerator,
             displayName,
             AccountTypes.MACHINE,
@@ -42,28 +41,26 @@ public sealed class MachineAccount : Account<MachineAccount>
     /// <summary>
     /// Registers a new machine account.
     /// </summary>
-    /// <param name="dateTimeService">A date and time service provider.</param>
-    /// <param name="trackingKeyGenerator">A tracking key generator.</param>
+    /// <param name="dependencies">
+    /// An object that provides required dependencies for creating domain events.
+    /// </param>
     /// <param name="machineAccountKeyGenerator">A machine account key generator.</param>
     /// <param name="displayName">The machine account display name.</param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
     public static Result Register(
-        IDateTimeService dateTimeService,
-        ITrackingKeyGenerator trackingKeyGenerator,
+        IEventDependenciesProvider dependencies,
         IMachineAccountKeyGenerator machineAccountKeyGenerator,
         string displayName)
     {
-        if (dateTimeService is null ||
-        trackingKeyGenerator is null ||
-        machineAccountKeyGenerator is null ||
-        string.IsNullOrWhiteSpace(displayName))
+        if (dependencies is null ||
+            machineAccountKeyGenerator is null ||
+            string.IsNullOrWhiteSpace(displayName))
         {
             return Result.Terminated(ResultCodes.BAD_REQUEST);
         }
 
         _ = new MachineAccount(
-            dateTimeService,
-            trackingKeyGenerator,
+            dependencies,
             machineAccountKeyGenerator,
             displayName,
             out Result result);
@@ -74,79 +71,62 @@ public sealed class MachineAccount : Account<MachineAccount>
     /// <summary>
     /// Activates the machine account.
     /// </summary>
-    /// <param name="dateTimeService">A date and time service provider.</param>
-    /// <param name="trackingKeyGenerator">A tracking key generator.</param>
+    /// <param name="dependencies">
+    /// An object that provides required dependencies for creating domain events.
+    /// </param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
-    public new Result Activate(
-        IDateTimeService dateTimeService,
-        ITrackingKeyGenerator trackingKeyGenerator)
+    public new Result Activate(IEventDependenciesProvider dependencies)
     {
-        return base.Activate(dateTimeService, trackingKeyGenerator);
+        return base.Activate(dependencies);
     }
 
     /// <summary>
     /// Deactivates the machine account.
     /// </summary>
-    /// <param name="dateTimeService">A date and time service provider.</param>
-    /// <param name="trackingKeyGenerator">A tracking key generator.</param>
+    /// <param name="dependencies">
+    /// An object that provides required dependencies for creating domain events.
+    /// </param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
-    public new Result Deactivate(
-        IDateTimeService dateTimeService,
-        ITrackingKeyGenerator trackingKeyGenerator)
+    public new Result Deactivate(IEventDependenciesProvider dependencies)
     {
-        return base.Deactivate(dateTimeService, trackingKeyGenerator);
-    }
-
-    /// <summary>
-    /// Restricts the machine account.
-    /// </summary>
-    /// <param name="dateTimeService">A date and time service provider.</param>
-    /// <param name="trackingKeyGenerator">A tracking key generator.</param>
-    /// <returns>An object as type of the <see cref="Result"/>.</returns>
-    public new Result Restrict(
-        IDateTimeService dateTimeService,
-        ITrackingKeyGenerator trackingKeyGenerator)
-    {
-        return base.Restrict(dateTimeService, trackingKeyGenerator);
+        return base.Deactivate(dependencies);
     }
 
     /// <summary>
     /// Closes the machine account.
     /// </summary>
-    /// <param name="dateTimeService">A date and time service provider.</param>
-    /// <param name="trackingKeyGenerator">A tracking key generator.</param>
+    /// <param name="dependencies">
+    /// An object that provides required dependencies for creating domain events.
+    /// </param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
-    public new Result Close(
-        IDateTimeService dateTimeService,
-        ITrackingKeyGenerator trackingKeyGenerator)
+    public new Result Close(IEventDependenciesProvider dependencies)
     {
-        return base.Close(dateTimeService, trackingKeyGenerator);
+        return base.Close(dependencies);
     }
 
     /// <summary>
     /// Bans the machine account.
     /// </summary>
-    /// <param name="dateTimeService">A date and time service provider.</param>
-    /// <param name="trackingKeyGenerator">A tracking key generator.</param>
+    /// <param name="dependencies">
+    /// An object that provides required dependencies for creating domain events.
+    /// </param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
-    public new Result Ban(
-        IDateTimeService dateTimeService,
-        ITrackingKeyGenerator trackingKeyGenerator)
+    public new Result Ban(IEventDependenciesProvider dependencies)
     {
-        return base.Ban(dateTimeService, trackingKeyGenerator);
+        return base.Ban(dependencies);
     }
 
     /// <summary>
     /// Assigns a role to the machine account.
     /// </summary>
-    /// <param name="dateTimeService">A date and time service provider.</param>
-    /// <param name="trackingKeyGenerator">A tracking key generator.</param>
+    /// <param name="dependencies">
+    /// An object that provides required dependencies for creating domain events.
+    /// </param>
     /// <param name="roleKey">Desired role key.</param>
     /// <param name="isSensitiveRole">A flag indicating whether the role is sensitive.</param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
     public new Result AssignRole(
-        IDateTimeService dateTimeService,
-        ITrackingKeyGenerator trackingKeyGenerator,
+        IEventDependenciesProvider dependencies,
         RoleKey roleKey,
         bool isSensitiveRole)
     {
@@ -157,21 +137,53 @@ public sealed class MachineAccount : Account<MachineAccount>
                 message: "Machine accounts cannot be assigned to sensitive roles.");
         }
 
-        return base.AssignRole(dateTimeService, trackingKeyGenerator, roleKey, isSensitiveRole);
+        return base.AssignRole(dependencies, roleKey, isSensitiveRole);
     }
 
     /// <summary>
     /// Revokes a role from the machine account.
     /// </summary>
-    /// <param name="dateTimeService">A date and time service provider.</param>
-    /// <param name="trackingKeyGenerator">A tracking key generator.</param>
+    /// <param name="dependencies">
+    /// An object that provides required dependencies for creating domain events.
+    /// </param>
     /// <param name="roleKey">Desired role's key.</param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
     public new Result RevokeRole(
-        IDateTimeService dateTimeService,
-        ITrackingKeyGenerator trackingKeyGenerator,
+        IEventDependenciesProvider dependencies,
         RoleKey roleKey)
     {
-        return base.RevokeRole(dateTimeService, trackingKeyGenerator, roleKey);
+        return base.RevokeRole(dependencies, roleKey);
+    }
+
+    /// <summary>
+    /// Evaluates the state of the account after a successful authentication attempt.
+    /// </summary>
+    /// <param name="dependencies">
+    /// An object that provides required dependencies for creating domain events.
+    /// </param>
+    /// <param name="configs">An object that contains the required configs.</param>
+    /// <param name="passportType">The type of a passport that used for authentication.</param>
+    /// <returns>An object as type of the <see cref="Result"/>.</returns>
+    public new Result PassportVerified(
+        IEventDependenciesProvider dependencies,
+        IAuthenticationConfigProvider configs,
+        PassportTypes passportType)
+    {
+        return base.PassportVerified(dependencies, configs, passportType);
+    }
+
+    /// <summary>
+    /// Evaluates the state of the account after a failed authentication attempt.
+    /// </summary>
+    /// <param name="dependencies">
+    /// An object that provides required dependencies for creating domain events.
+    /// </param>
+    /// <param name="configs">An object that contains the required configs.</param>
+    /// <returns>An object as type of the <see cref="Result"/>.</returns>
+    public new Result PassportVerificationFailed(
+        IEventDependenciesProvider dependencies,
+        IAuthenticationConfigProvider configs)
+    {
+        return base.PassportVerificationFailed(dependencies, configs);
     }
 }

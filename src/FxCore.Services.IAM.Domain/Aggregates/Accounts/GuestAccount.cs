@@ -23,14 +23,12 @@ public sealed class GuestAccount : Account<GuestAccount>
     }
 
     private GuestAccount(
-        IDateTimeService dateTimeService,
-        ITrackingKeyGenerator trackingKeyGenerator,
+        IEventDependenciesProvider dependencies,
         IGuestAccountKeyGenerator guestAccountKeyGenerator,
         string displayName,
         out Result result)
         : base(
-            dateTimeService,
-            trackingKeyGenerator,
+            dependencies,
             guestAccountKeyGenerator,
             displayName,
             AccountTypes.GUEST,
@@ -42,19 +40,18 @@ public sealed class GuestAccount : Account<GuestAccount>
     /// <summary>
     /// Registers a new guest account.
     /// </summary>
-    /// <param name="dateTimeService">A date and time service provider.</param>
-    /// <param name="trackingKeyGenerator">A tracking key generator.</param>
+    /// <param name="dependencies">
+    /// An object that provides required dependencies for creating domain events.
+    /// </param>
     /// <param name="guestAccountKeyGenerator">A guest account key generator.</param>
     /// <param name="displayName">The guest account display name.</param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
     public static Result Register(
-        IDateTimeService dateTimeService,
-        ITrackingKeyGenerator trackingKeyGenerator,
+        IEventDependenciesProvider dependencies,
         IGuestAccountKeyGenerator guestAccountKeyGenerator,
         string displayName)
     {
-        if (dateTimeService is null ||
-            trackingKeyGenerator is null ||
+        if (dependencies is null ||
             guestAccountKeyGenerator is null ||
             string.IsNullOrWhiteSpace(displayName))
         {
@@ -62,8 +59,7 @@ public sealed class GuestAccount : Account<GuestAccount>
         }
 
         _ = new GuestAccount(
-            dateTimeService,
-            trackingKeyGenerator,
+            dependencies,
             guestAccountKeyGenerator,
             displayName,
             out Result result);
@@ -74,14 +70,14 @@ public sealed class GuestAccount : Account<GuestAccount>
     /// <summary>
     /// Assigns a role to the guest account.
     /// </summary>
-    /// <param name="dateTimeService">A date and time service provider.</param>
-    /// <param name="trackingKeyGenerator">A tracking key generator.</param>
+    /// <param name="dependencies">
+    /// An object that provides required dependencies for creating domain events.
+    /// </param>
     /// <param name="roleKey">Desired role key.</param>
     /// <param name="isSensitiveRole">A flag indicating whether the role is sensitive.</param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
     public new Result AssignRole(
-        IDateTimeService dateTimeService,
-        ITrackingKeyGenerator trackingKeyGenerator,
+        IEventDependenciesProvider dependencies,
         RoleKey roleKey,
         bool isSensitiveRole)
     {
@@ -92,21 +88,21 @@ public sealed class GuestAccount : Account<GuestAccount>
                 message: "Guest accounts cannot be assigned to sensitive roles.");
         }
 
-        return base.AssignRole(dateTimeService, trackingKeyGenerator, roleKey, isSensitiveRole);
+        return base.AssignRole(dependencies, roleKey, isSensitiveRole);
     }
 
     /// <summary>
     /// Revokes a role from the guest account.
     /// </summary>
-    /// <param name="dateTimeService">A date and time service provider.</param>
-    /// <param name="trackingKeyGenerator">A tracking key generator.</param>
+    /// <param name="dependencies">
+    /// An object that provides required dependencies for creating domain events.
+    /// </param>
     /// <param name="roleKey">Desired role's key.</param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
     public new Result RevokeRole(
-        IDateTimeService dateTimeService,
-        ITrackingKeyGenerator trackingKeyGenerator,
+        IEventDependenciesProvider dependencies,
         RoleKey roleKey)
     {
-        return base.RevokeRole(dateTimeService, trackingKeyGenerator, roleKey);
+        return base.RevokeRole(dependencies, roleKey);
     }
 }

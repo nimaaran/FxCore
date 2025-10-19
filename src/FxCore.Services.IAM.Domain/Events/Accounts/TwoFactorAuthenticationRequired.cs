@@ -5,17 +5,32 @@
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
 using FxCore.Abstraction.Models;
+using FxCore.Abstraction.Services;
 using FxCore.Services.IAM.Shared.Accounts;
 
-namespace FxCore.Services.IAM.Domain.Aggregates.Accounts;
+namespace FxCore.Services.IAM.Domain.Events.Accounts;
 
 /// <summary>
-/// Defines the event that is raised when an account is activated.
+/// Defines an event that is raised when an account is verified but two-factor authentication
+/// is required.
 /// </summary>
-/// <param name="TrackingKey">The event tracking key.</param>
-/// <param name="Timestamp">The event timestamp.</param>
-/// <param name="Key">The account aggregate key.</param>
-public sealed record AccountActivated(
-    string TrackingKey,
-    DateTimeOffset Timestamp,
-    AccountKey Key) : IDomainEventModel;
+public record class TwoFactorAuthenticationRequired : DomainEventBase
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TwoFactorAuthenticationRequired"/> class.
+    /// </summary>
+    /// <param name="dependencies">Domain event dependencies provider.</param>
+    /// <param name="accountKey">The relevant account aggregate key.</param>
+    public TwoFactorAuthenticationRequired(
+        IEventDependenciesProvider dependencies,
+        AccountKey accountKey)
+        : base(dependencies)
+    {
+        this.AccountKey = accountKey;
+    }
+
+    /// <summary>
+    /// Gets the relevant account aggregate key.
+    /// </summary>
+    public AccountKey AccountKey { get; }
+}

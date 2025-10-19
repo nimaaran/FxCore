@@ -4,46 +4,30 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-namespace FxCore.Services.IAM.Shared.Accounts;
+using FxCore.Abstraction.Models;
+using FxCore.Abstraction.Services;
+using FxCore.Services.IAM.Shared.Accounts;
+
+namespace FxCore.Services.IAM.Domain.Events.Accounts;
 
 /// <summary>
-/// Defines a list of possible states for an account.
+/// Defines an event model representing the protection of an account.
 /// </summary>
-public enum AccountStates : byte
+public sealed record AccountProtected : DomainEventBase
 {
     /// <summary>
-    /// Indicates that account has been registered but not yet activated.
+    /// Initializes a new instance of the <see cref="AccountProtected"/> class.
     /// </summary>
-    REGISTERED = 1,
+    /// <param name="dependencies">Domain event dependencies provider.</param>
+    /// <param name="accountKey">The relevant account aggregate key.</param>
+    public AccountProtected(IEventDependenciesProvider dependencies, AccountKey accountKey)
+        : base(dependencies)
+    {
+        this.AccountKey = accountKey;
+    }
 
     /// <summary>
-    /// Indicates that account is activated and fully functional.
+    /// Gets the relevant account aggregate key.
     /// </summary>
-    ACTIVATED = 2,
-
-    /// <summary>
-    /// Indicates that account is deactivated and not functional.
-    /// </summary>
-    DEACTIVATED = 3,
-
-
-    /// <summary>
-    /// Indicates that the account is protected due to security reasons.
-    /// </summary>
-    PROTECTED = 4,
-
-    /// <summary>
-    /// Indicates that the account is suspended due to security reasons.
-    /// </summary>
-    SUSPENDED = 5,
-
-    /// <summary>
-    /// Indicates that account is permanently closed and cannot be reactivated.
-    /// </summary>
-    CLOSED = 6,
-
-    /// <summary>
-    /// Indicates that account is banned due to violations of terms of service or policies.
-    /// </summary>
-    BANNED = 7,
+    public AccountKey AccountKey { get; }
 }

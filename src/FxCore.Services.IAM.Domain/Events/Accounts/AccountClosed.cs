@@ -5,23 +5,29 @@
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
 using FxCore.Abstraction.Models;
+using FxCore.Abstraction.Services;
 using FxCore.Services.IAM.Shared.Accounts;
 
-namespace FxCore.Services.IAM.Domain.Aggregates.Accounts;
+namespace FxCore.Services.IAM.Domain.Events.Accounts;
 
 /// <summary>
-/// Defines an event model for account registration.
+/// Defines an event model for when an account is closed.
 /// </summary>
-/// <param name="TrackingKey">The event tracking key.</param>
-/// <param name="Timestamp">The event timestamp.</param>
-/// <param name="Key">The account aggregate key.</param>
-/// <param name="DisplayName">The account display name.</param>
-/// <param name="Type">Type of the account.</param>
-/// <param name="State">State of the account.</param>
-public sealed record AccountRegistered(
-    string TrackingKey,
-    DateTimeOffset Timestamp,
-    AccountKey Key,
-    string DisplayName,
-    AccountTypes Type,
-    AccountStates State) : IDomainEventModel;
+public sealed record AccountClosed : DomainEventBase
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AccountClosed"/> class.
+    /// </summary>
+    /// <param name="dependencies">Domain event dependencies provider.</param>
+    /// <param name="accountKey">The relevant account aggregate key.</param>
+    public AccountClosed(IEventDependenciesProvider dependencies, AccountKey accountKey)
+        : base(dependencies)
+    {
+        this.AccountKey = accountKey;
+    }
+
+    /// <summary>
+    /// Gets the relevant account aggregate key.
+    /// </summary>
+    public AccountKey AccountKey { get; }
+}

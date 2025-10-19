@@ -23,14 +23,12 @@ public sealed class SystemAccount : Account<SystemAccount>
     }
 
     private SystemAccount(
-        IDateTimeService dateTimeService,
-        ITrackingKeyGenerator trackingKeyGenerator,
+        IEventDependenciesProvider dependencies,
         ISystemAccountKeyGenerator systemAccountKeyGenerator,
         string displayName,
         out Result result)
         : base(
-            dateTimeService,
-            trackingKeyGenerator,
+            dependencies,
             systemAccountKeyGenerator,
             displayName,
             AccountTypes.SYSTEM,
@@ -42,19 +40,18 @@ public sealed class SystemAccount : Account<SystemAccount>
     /// <summary>
     /// Registers a new system account.
     /// </summary>
-    /// <param name="dateTimeService">A date and time service provider.</param>
-    /// <param name="trackingKeyGenerator">A tracking key generator.</param>
+    /// <param name="dependencies">
+    /// An object that provides required dependencies for creating domain events.
+    /// </param>
     /// <param name="systemAccountKeyGenerator">A system account key generator.</param>
     /// <param name="displayName">The system account display name.</param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
     public static Result Register(
-        IDateTimeService dateTimeService,
-        ITrackingKeyGenerator trackingKeyGenerator,
+        IEventDependenciesProvider dependencies,
         ISystemAccountKeyGenerator systemAccountKeyGenerator,
         string displayName)
     {
-        if (dateTimeService is null ||
-            trackingKeyGenerator is null ||
+        if (dependencies is null ||
             systemAccountKeyGenerator is null ||
             string.IsNullOrWhiteSpace(displayName))
         {
@@ -62,8 +59,7 @@ public sealed class SystemAccount : Account<SystemAccount>
         }
 
         _ = new SystemAccount(
-            dateTimeService,
-            trackingKeyGenerator,
+            dependencies,
             systemAccountKeyGenerator,
             displayName,
             out Result result);
@@ -74,32 +70,32 @@ public sealed class SystemAccount : Account<SystemAccount>
     /// <summary>
     /// Assigns a role to the system account.
     /// </summary>
-    /// <param name="dateTimeService">A date and time service provider.</param>
-    /// <param name="trackingKeyGenerator">A tracking key generator.</param>
+    /// <param name="dependencies">
+    /// An object that provides required dependencies for creating domain events.
+    /// </param>
     /// <param name="roleKey">Desired role key.</param>
     /// <param name="isSensitiveRole">A flag indicating whether the role is sensitive.</param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
     public new Result AssignRole(
-        IDateTimeService dateTimeService,
-        ITrackingKeyGenerator trackingKeyGenerator,
+        IEventDependenciesProvider dependencies,
         RoleKey roleKey,
         bool isSensitiveRole)
     {
-        return base.AssignRole(dateTimeService, trackingKeyGenerator, roleKey, isSensitiveRole);
+        return base.AssignRole(dependencies, roleKey, isSensitiveRole);
     }
 
     /// <summary>
     /// Revokes a role from the system account.
     /// </summary>
-    /// <param name="dateTimeService">A date and time service provider.</param>
-    /// <param name="trackingKeyGenerator">A tracking key generator.</param>
+    /// <param name="dependencies">
+    /// An object that provides required dependencies for creating domain events.
+    /// </param>
     /// <param name="roleKey">Desired role's key.</param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
     public new Result RevokeRole(
-        IDateTimeService dateTimeService,
-        ITrackingKeyGenerator trackingKeyGenerator,
+        IEventDependenciesProvider dependencies,
         RoleKey roleKey)
     {
-        return base.RevokeRole(dateTimeService, trackingKeyGenerator, roleKey);
+        return base.RevokeRole(dependencies, roleKey);
     }
 }

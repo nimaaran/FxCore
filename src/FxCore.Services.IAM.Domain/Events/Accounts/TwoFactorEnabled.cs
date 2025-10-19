@@ -5,20 +5,29 @@
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
 using FxCore.Abstraction.Models;
+using FxCore.Abstraction.Services;
 using FxCore.Services.IAM.Shared.Accounts;
-using FxCore.Services.IAM.Shared.Roles;
 
-namespace FxCore.Services.IAM.Domain.Aggregates.Accounts;
+namespace FxCore.Services.IAM.Domain.Events.Accounts;
 
 /// <summary>
-/// Defines an event that is triggered when a role is assigned to an account.
+/// Defines an event model representing the enabling of two-factor authentication for an account.
 /// </summary>
-/// <param name="TrackingKey">The event tracking key.</param>
-/// <param name="Timestamp">The event timestamp.</param>
-/// <param name="AccountKey">The account aggregate key.</param>
-/// <param name="RoleKey">The role aggregate key.</param>
-public sealed record RoleAssigned(
-    string TrackingKey,
-    DateTimeOffset Timestamp,
-    AccountKey AccountKey,
-    RoleKey RoleKey) : IDomainEventModel;
+public sealed record TwoFactorEnabled : DomainEventBase
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TwoFactorEnabled"/> class.
+    /// </summary>
+    /// <param name="dependencies">Domain event dependencies provider.</param>
+    /// <param name="accountKey">The relevant account aggregate key.</param>
+    public TwoFactorEnabled(IEventDependenciesProvider dependencies, AccountKey accountKey)
+        : base(dependencies)
+    {
+        this.AccountKey = accountKey;
+    }
+
+    /// <summary>
+    /// Gets the relevant account aggregate key.
+    /// </summary>
+    public AccountKey AccountKey { get; }
+}

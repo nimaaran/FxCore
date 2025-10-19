@@ -4,46 +4,38 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-namespace FxCore.Services.IAM.Shared.Accounts;
+using FxCore.Abstraction.Services;
+
+namespace FxCore.Services.IAM.Domain.Services;
 
 /// <summary>
-/// Defines a list of possible states for an account.
+/// Defines a contract for passports' config provider.
 /// </summary>
-public enum AccountStates : byte
+public interface IAuthenticationConfigProvider : IDomainService
 {
     /// <summary>
-    /// Indicates that account has been registered but not yet activated.
+    /// Gets a value indicating after how many failed login attempts the account gets protected.
     /// </summary>
-    REGISTERED = 1,
+    byte ProtectionThreshold { get; }
 
     /// <summary>
-    /// Indicates that account is activated and fully functional.
+    /// Gets a value indicating after how many failed login attempts the account gets suspended.
     /// </summary>
-    ACTIVATED = 2,
+    byte SuspensionThreshold { get; }
 
     /// <summary>
-    /// Indicates that account is deactivated and not functional.
+    /// Gets a value indicating the duration of the account protection.
     /// </summary>
-    DEACTIVATED = 3,
-
-
-    /// <summary>
-    /// Indicates that the account is protected due to security reasons.
-    /// </summary>
-    PROTECTED = 4,
+    TimeSpan ProtectionDuration { get; }
 
     /// <summary>
-    /// Indicates that the account is suspended due to security reasons.
+    /// Gets a value indicating the duration of the account suspension.
     /// </summary>
-    SUSPENDED = 5,
+    TimeSpan SuspensionDuration { get; }
 
     /// <summary>
-    /// Indicates that account is permanently closed and cannot be reactivated.
+    /// Gets a timestamp indicating how much time is valid between first authentication step and
+    /// second step in two-factor authentication.
     /// </summary>
-    CLOSED = 6,
-
-    /// <summary>
-    /// Indicates that account is banned due to violations of terms of service or policies.
-    /// </summary>
-    BANNED = 7,
+    TimeSpan TwoFactorStepsGapDuration { get; }
 }

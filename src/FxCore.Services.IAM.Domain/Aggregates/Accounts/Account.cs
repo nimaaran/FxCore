@@ -7,8 +7,10 @@
 using FxCore.Abstraction.Models;
 using FxCore.Abstraction.Services;
 using FxCore.Abstraction.Types;
+using FxCore.Services.IAM.Domain.Events.Accounts;
 using FxCore.Services.IAM.Domain.Services;
 using FxCore.Services.IAM.Shared.Accounts;
+using FxCore.Services.IAM.Shared.Passports;
 using FxCore.Services.IAM.Shared.Roles;
 
 namespace FxCore.Services.IAM.Domain.Aggregates.Accounts;
@@ -37,16 +39,16 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
     /// <summary>
     /// Initializes a new instance of the <see cref="Account{TAggregateRootModel}"/> class.
     /// </summary>
-    /// <param name="dateTimeService">A date nd time service provider.</param>
-    /// <param name="trackingKeyGenerator">A tracking key generator.</param>
+    /// <param name="dependencies">
+    /// An object that provides required dependencies for creating domain events.
+    /// </param>
     /// <param name="accountKeyGenerator">An account key generator.</param>
     /// <param name="displayName">The account display name.</param>
     /// <param name="accountType">The account type.</param>
     /// <param name="accountState">The account state.</param>
     /// <param name="result">An object as type of <see cref="Result"/>.</param>
     protected Account(
-        IDateTimeService dateTimeService,
-        ITrackingKeyGenerator trackingKeyGenerator,
+        IEventDependenciesProvider dependencies,
         IAccountKeyGenerator<TAggregateRootModel> accountKeyGenerator,
         string displayName,
         AccountTypes accountType,
@@ -54,15 +56,14 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
         out Result result)
         : this(
             accountKey: accountKeyGenerator.Generate(),
-            @lock: AggregateLock.Create(dateTimeService.Now()))
+            @lock: AggregateLock.Create(dependencies.DateTimeService.Now()))
     {
         var @event = new AccountRegistered(
-            TrackingKey: trackingKeyGenerator.Generate(),
-            Timestamp: this.Lock.Timestamp,
-            Key: this.Key,
-            DisplayName: displayName,
-            Type: accountType,
-            State: accountState);
+            dependencies,
+            accountKey: this.Key,
+            displayName: displayName,
+            type: accountType,
+            state: accountState);
 
         result = this.ApplyEvent(@event: @event, isNew: true);
     }
@@ -80,6 +81,16 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
     /// Gets the account display name.
     /// </summary>
     public string DisplayName { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// Gets the number of failed login attempts.
+    /// </summary>
+    public byte FailedLoginAttemptsCounter { get; private set; } = 0;
+
+    /// <summary>
+    /// Gets the timestamp of the last login attempt.
+    /// </summary>
+    public DateTimeOffset LastLoginAttempt { get; private set; } = DateTimeOffset.MinValue;
 
     /// <summary>
     /// Gets a value indicating whether two-factor authentication is enabled or not.
@@ -104,23 +115,20 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
     /// <summary>
     /// Activates the account.
     /// </summary>
-    /// <param name="dateTimeService">A date and time service provider.</param>
-    /// <param name="trackingKeyGenerator">A tracking key generator.</param>
+    /// <param name="dependencies">
+    /// An object that provides required dependencies for creating domain events.
+    /// </param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
-    protected Result Activate(
-        IDateTimeService dateTimeService,
-        ITrackingKeyGenerator trackingKeyGenerator)
+    protected Result Activate(IEventDependenciesProvider dependencies)
     {
-        if (dateTimeService is null ||
-            trackingKeyGenerator is null)
+        if (dependencies is null)
         {
             return Result.Terminated(ResultCodes.BAD_REQUEST);
         }
 
         var @event = new AccountActivated(
-            TrackingKey: trackingKeyGenerator.Generate(),
-            Timestamp: dateTimeService.Now(),
-            Key: this.Key);
+            dependencies: dependencies,
+            accountKey: this.Key);
 
         return this.ApplyEvent(@event: @event, isNew: true);
     }
@@ -128,47 +136,20 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
     /// <summary>
     /// Deactivates the account.
     /// </summary>
-    /// <param name="dateTimeService">A date and time service provider.</param>
-    /// <param name="trackingKeyGenerator">A tracking key generator.</param>
+    /// <param name="dependencies">
+    /// An object that provides required dependencies for creating domain events.
+    /// </param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
-    protected Result Deactivate(
-        IDateTimeService dateTimeService,
-        ITrackingKeyGenerator trackingKeyGenerator)
+    protected Result Deactivate(IEventDependenciesProvider dependencies)
     {
-        if (dateTimeService is null ||
-            trackingKeyGenerator is null)
+        if (dependencies is null)
         {
             return Result.Terminated(ResultCodes.BAD_REQUEST);
         }
 
         var @event = new AccountDeactivated(
-            TrackingKey: trackingKeyGenerator.Generate(),
-            Timestamp: dateTimeService.Now(),
-            Key: this.Key);
-
-        return this.ApplyEvent(@event: @event, isNew: true);
-    }
-
-    /// <summary>
-    /// Restricts the account.
-    /// </summary>
-    /// <param name="dateTimeService">A date and time service provider.</param>
-    /// <param name="trackingKeyGenerator">A tracking key generator.</param>
-    /// <returns>An object as type of the <see cref="Result"/>.</returns>
-    protected Result Restrict(
-        IDateTimeService dateTimeService,
-        ITrackingKeyGenerator trackingKeyGenerator)
-    {
-        if (dateTimeService is null ||
-            trackingKeyGenerator is null)
-        {
-            return Result.Terminated(ResultCodes.BAD_REQUEST);
-        }
-
-        var @event = new AccountRestricted(
-            TrackingKey: trackingKeyGenerator.Generate(),
-            Timestamp: dateTimeService.Now(),
-            Key: this.Key);
+            dependencies: dependencies,
+            accountKey: this.Key);
 
         return this.ApplyEvent(@event: @event, isNew: true);
     }
@@ -176,23 +157,20 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
     /// <summary>
     /// Closes the account.
     /// </summary>
-    /// <param name="dateTimeService">A date and time service provider.</param>
-    /// <param name="trackingKeyGenerator">A tracking key generator.</param>
+    /// <param name="dependencies">
+    /// An object that provides required dependencies for creating domain events.
+    /// </param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
-    protected Result Close(
-        IDateTimeService dateTimeService,
-        ITrackingKeyGenerator trackingKeyGenerator)
+    protected Result Close(IEventDependenciesProvider dependencies)
     {
-        if (dateTimeService is null ||
-            trackingKeyGenerator is null)
+        if (dependencies is null)
         {
             return Result.Terminated(ResultCodes.BAD_REQUEST);
         }
 
         var @event = new AccountClosed(
-            TrackingKey: trackingKeyGenerator.Generate(),
-            Timestamp: dateTimeService.Now(),
-            Key: this.Key);
+            dependencies: dependencies,
+            accountKey: this.Key);
 
         return this.ApplyEvent(@event: @event, isNew: true);
     }
@@ -200,23 +178,20 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
     /// <summary>
     /// Bans the account.
     /// </summary>
-    /// <param name="dateTimeService">A date and time service provider.</param>
-    /// <param name="trackingKeyGenerator">A tracking key generator.</param>
+    /// <param name="dependencies">
+    /// An object that provides required dependencies for creating domain events.
+    /// </param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
-    protected Result Ban(
-        IDateTimeService dateTimeService,
-        ITrackingKeyGenerator trackingKeyGenerator)
+    protected Result Ban(IEventDependenciesProvider dependencies)
     {
-        if (dateTimeService is null ||
-            trackingKeyGenerator is null)
+        if (dependencies is null)
         {
             return Result.Terminated(ResultCodes.BAD_REQUEST);
         }
 
         var @event = new AccountBanned(
-            TrackingKey: trackingKeyGenerator.Generate(),
-            Timestamp: dateTimeService.Now(),
-            Key: this.Key);
+            dependencies: dependencies,
+            accountKey: this.Key);
 
         return this.ApplyEvent(@event: @event, isNew: true);
     }
@@ -224,29 +199,27 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
     /// <summary>
     /// Assigns a role to the account.
     /// </summary>
-    /// <param name="dateTimeService">A date and time service provider.</param>
-    /// <param name="trackingKeyGenerator">A tracking key generator.</param>
+    /// <param name="dependencies">
+    /// An object that provides required dependencies for creating domain events.
+    /// </param>
     /// <param name="roleKey">Desired role key.</param>
     /// <param name="isSensitiveRole">A flag indicating whether the role is sensitive.</param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
     protected Result AssignRole(
-        IDateTimeService dateTimeService,
-        ITrackingKeyGenerator trackingKeyGenerator,
+        IEventDependenciesProvider dependencies,
         RoleKey roleKey,
         bool isSensitiveRole)
     {
-        if (dateTimeService is null ||
-            trackingKeyGenerator is null ||
+        if (dependencies is null ||
             roleKey == new RoleKey(string.Empty))
         {
             return Result.Terminated(ResultCodes.BAD_REQUEST);
         }
 
         var @event = new RoleAssigned(
-            TrackingKey: trackingKeyGenerator.Generate(),
-            Timestamp: dateTimeService.Now(),
-            AccountKey: this.Key,
-            RoleKey: roleKey);
+            dependencies: dependencies,
+            accountKey: this.Key,
+            roleKey: roleKey);
 
         if (isSensitiveRole && !this.TwoFactorEnabled)
         {
@@ -261,27 +234,23 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
     /// <summary>
     /// Revokes a role from the account.
     /// </summary>
-    /// <param name="dateTimeService">A date and time service provider.</param>
-    /// <param name="trackingKeyGenerator">A tracking key generator.</param>
+    /// <param name="dependencies">
+    /// An object that provides required dependencies for creating domain events.
+    /// </param>
     /// <param name="roleKey">Desired role's key.</param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
-    protected Result RevokeRole(
-        IDateTimeService dateTimeService,
-        ITrackingKeyGenerator trackingKeyGenerator,
-        RoleKey roleKey)
+    protected Result RevokeRole(IEventDependenciesProvider dependencies, RoleKey roleKey)
     {
-        if (dateTimeService is null ||
-            trackingKeyGenerator is null ||
+        if (dependencies is null ||
             roleKey == new RoleKey(string.Empty))
         {
             return Result.Terminated(ResultCodes.BAD_REQUEST);
         }
 
         var @event = new RoleRevoked(
-            TrackingKey: trackingKeyGenerator.Generate(),
-            Timestamp: dateTimeService.Now(),
-            AccountKey: this.Key,
-            RoleKey: roleKey);
+            dependencies: dependencies,
+            accountKey: this.Key,
+            roleKey: roleKey);
 
         return this.ApplyEvent(@event: @event, isNew: true);
     }
@@ -289,23 +258,20 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
     /// <summary>
     /// Enables two-factor authentication for the account.
     /// </summary>
-    /// <param name="dateTimeService">A date and time service provider.</param>
-    /// <param name="trackingKeyGenerator">A tracking key generator.</param>
+    /// <param name="dependencies">
+    /// An object that provides required dependencies for creating domain events.
+    /// </param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
-    protected Result EnableTwoFactor(
-        IDateTimeService dateTimeService,
-        ITrackingKeyGenerator trackingKeyGenerator)
+    protected Result EnableTwoFactor(IEventDependenciesProvider dependencies)
     {
-        if (dateTimeService is null ||
-            trackingKeyGenerator is null)
+        if (dependencies is null)
         {
             return Result.Terminated(ResultCodes.BAD_REQUEST);
         }
 
         var @event = new TwoFactorEnabled(
-            TrackingKey: trackingKeyGenerator.Generate(),
-            Timestamp: dateTimeService.Now(),
-            Key: this.Key);
+            dependencies: dependencies,
+            accountKey: this.Key);
 
         return this.ApplyEvent(@event: @event, isNew: true);
     }
@@ -313,25 +279,144 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
     /// <summary>
     /// Disables two-factor authentication for the account.
     /// </summary>
-    /// <param name="dateTimeService">A date and time service provider.</param>
-    /// <param name="trackingKeyGenerator">A tracking key generator.</param>
+    /// <param name="dependencies">
+    /// An object that provides required dependencies for creating domain events.
+    /// </param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
-    protected Result DisableTwoFactor(
-        IDateTimeService dateTimeService,
-        ITrackingKeyGenerator trackingKeyGenerator)
+    protected Result DisableTwoFactor(IEventDependenciesProvider dependencies)
     {
-        if (dateTimeService is null ||
-            trackingKeyGenerator is null)
+        if (dependencies is null)
         {
             return Result.Terminated(ResultCodes.BAD_REQUEST);
         }
 
         var @event = new TwoFactorDisabled(
-            TrackingKey: trackingKeyGenerator.Generate(),
-            Timestamp: dateTimeService.Now(),
-            Key: this.Key);
+            dependencies: dependencies,
+            accountKey: this.Key);
 
         return this.ApplyEvent(@event: @event, isNew: true);
+    }
+
+    /// <summary>
+    /// Evaluates the state of the account after a successful authentication attempt.
+    /// </summary>
+    /// <param name="dependencies">
+    /// An object that provides required dependencies for creating domain events.
+    /// </param>
+    /// <param name="configs">An object that contains the required configs.</param>
+    /// <param name="passportType">The type of a passport that used for authentication.</param>
+    /// <returns>An object as type of the <see cref="Result"/>.</returns>
+    protected Result PassportVerified(
+        IEventDependenciesProvider dependencies,
+        IAuthenticationConfigProvider configs,
+        PassportTypes passportType)
+    {
+        if (dependencies is null)
+        {
+            return Result.Terminated(ResultCodes.BAD_REQUEST);
+        }
+        else if (this.State is AccountStates.BANNED or
+                               AccountStates.CLOSED)
+        {
+            return Result.Terminated(
+                code: ResultCodes.INCONSISTENCY,
+                message: "The closed or banned account is not allowed to authenticate.");
+        }
+
+        Result result;
+
+        // Handles inactivated, suspended, and protected accounts
+        if (!this.TwoFactorEnabled || passportType is PassportTypes.PHONE or
+                                                      PassportTypes.EMAIL)
+        {
+            if (!this.HandleInactiveAccounts(dependencies, out result) ||
+                !this.HandleSuspendedAccounts(dependencies, configs, out result) ||
+                !this.HandleProtectedAccounts(dependencies, configs, out result))
+            {
+                return result;
+            }
+        }
+
+        var twoFactorAuthenticationEnd = this.LastLoginAttempt.Add(configs.TwoFactorStepsGapDuration);
+
+        if (this.TwoFactorEnabled &&
+            twoFactorAuthenticationEnd <= dependencies.DateTimeService.Now() &&
+            passportType is PassportTypes.EMAIL or
+                            PassportTypes.PHONE)
+        {
+            return Result.Terminated(
+                code: ResultCodes.INCONSISTENCY,
+                message: "The user should start authentication again.");
+        }
+
+        if (this.TwoFactorEnabled && passportType is not PassportTypes.EMAIL and
+                                                         PassportTypes.PHONE)
+        {
+            var @event = new TwoFactorAuthenticationRequired(
+                dependencies: dependencies,
+                accountKey: this.Key);
+
+            result = this.ApplyEvent(@event, isNew: true);
+        }
+        else
+        {
+            var @event = new AccountAuthenticated(
+                dependencies: dependencies,
+                accountKey: this.Key);
+
+            result = this.ApplyEvent(@event, isNew: true);
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Evaluates the state of the account after a failed authentication attempt.
+    /// </summary>
+    /// <param name="dependencies">
+    /// An object that provides required dependencies for creating domain events.
+    /// </param>
+    /// <param name="configs">An object that contains the required configs.</param>
+    /// <returns>An object as type of the <see cref="Result"/>.</returns>
+    protected Result PassportVerificationFailed(
+        IEventDependenciesProvider dependencies,
+        IAuthenticationConfigProvider configs)
+    {
+        if (dependencies is null)
+        {
+            return Result.Terminated(ResultCodes.BAD_REQUEST);
+        }
+        else if (this.State is AccountStates.BANNED or
+                               AccountStates.CLOSED)
+        {
+            return Result.Terminated(
+                code: ResultCodes.INCONSISTENCY,
+                message: "The closed or banned account is not allowed to authenticate.");
+        }
+        else if (this.FailedLoginAttemptsCounter + 1 == configs.SuspensionThreshold)
+        {
+            var @event = new AccountSuspended(
+                dependencies: dependencies,
+                accountKey: this.Key);
+
+            return this.ApplyEvent(@event, isNew: true);
+        }
+        else if (this.FailedLoginAttemptsCounter + 1 == configs.ProtectionThreshold)
+        {
+            var @event = new AccountProtected(
+                dependencies: dependencies,
+                accountKey: this.Key);
+
+            return this.ApplyEvent(@event, isNew: true);
+        }
+        else
+        {
+            var @event = new AuthenticationFailed(
+                dependencies: dependencies,
+                accountKey: this.Key);
+
+            return this.ApplyEvent(@event, isNew: true);
+        }
     }
 
     /// <inheritdoc/>
@@ -340,20 +425,88 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
         var result = @event switch
         {
             AccountRegistered e => this.OnAccountRegistered(e),
-            AccountActivated _ => this.OnAccountActivated(),
+            AccountActivated e => this.OnAccountActivated(),
             AccountDeactivated _ => this.OnAccountDeactivated(),
-            AccountRestricted _ => this.OnAccountRestricted(),
             AccountClosed _ => this.OnAccountClosed(),
             AccountBanned _ => this.OnAccountBanned(),
             TwoFactorEnabled _ => this.OnTwoFactorEnabled(),
             TwoFactorDisabled _ => this.OnTwoFactorDisabled(),
             RoleAssigned e => this.OnRoleAssigned(e),
             RoleRevoked e => this.OnRoleRevoked(e),
+            AccountProtected e => this.OnAccountProtected(e),
+            AccountSuspended e => this.OnAccountSuspended(e),
+            AuthenticationFailed e => this.OnAuthenticationFailed(e),
+            AccountAuthenticated e => this.OnAccountAuthenticated(e),
+            TwoFactorAuthenticationRequired _ => this.OnTwoFactorAuthenticationRequired(),
 
             _ => base.DispatchEvent(@event),
         };
 
         return result;
+    }
+
+    private bool HandleInactiveAccounts(
+        IEventDependenciesProvider dependencies,
+        out Result result)
+    {
+        if (this.State is AccountStates.REGISTERED or
+                          AccountStates.DEACTIVATED)
+        {
+            result = this.Activate(dependencies);
+
+            if (result.State != ResultStates.COMPLETED)
+            {
+                return false;
+            }
+        }
+
+        result = Result.Completed();
+
+        return true;
+    }
+
+    private bool HandleSuspendedAccounts(
+        IEventDependenciesProvider dependencies,
+        IAuthenticationConfigProvider configs,
+        out Result result)
+    {
+        if (this.State is AccountStates.SUSPENDED)
+        {
+            if (this.LastLoginAttempt.Add(configs.SuspensionDuration) >= dependencies.DateTimeService.Now())
+            {
+                result = Result.Terminated(
+                    code: ResultCodes.INCONSISTENCY,
+                    message: "The account is suspended.");
+
+                return false;
+            }
+        }
+
+        result = Result.Completed();
+
+        return true;
+    }
+
+    private bool HandleProtectedAccounts(
+        IEventDependenciesProvider dependencies,
+        IAuthenticationConfigProvider configs,
+        out Result result)
+    {
+        if (this.State is AccountStates.PROTECTED)
+        {
+            if (this.LastLoginAttempt.Add(configs.ProtectionDuration) >= dependencies.DateTimeService.Now())
+            {
+                result = Result.Terminated(
+                    code: ResultCodes.INCONSISTENCY,
+                    message: "The account is protected.");
+
+                return false;
+            }
+        }
+
+        result = Result.Completed();
+
+        return true;
     }
 
     private Result OnAccountRegistered(AccountRegistered @event)
@@ -363,7 +516,46 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
         this.Type = @event.Type;
         this.TwoFactorEnabled = false;
 
-        return Result.Completed(@event.Key);
+        return Result.Completed(@event.AccountKey);
+    }
+
+    private Result OnAccountProtected(AccountProtected @event)
+    {
+        this.State = AccountStates.PROTECTED;
+        this.FailedLoginAttemptsCounter += 1;
+        this.LastLoginAttempt = @event.Timestamp;
+
+        return Result.Completed();
+    }
+
+    private Result OnAccountSuspended(AccountSuspended @event)
+    {
+        this.State = AccountStates.SUSPENDED;
+        this.FailedLoginAttemptsCounter += 1;
+        this.LastLoginAttempt = @event.Timestamp;
+
+        return Result.Completed();
+    }
+
+    private Result OnAuthenticationFailed(AuthenticationFailed @event)
+    {
+        this.FailedLoginAttemptsCounter += 1;
+        this.LastLoginAttempt = @event.Timestamp;
+
+        return Result.Completed();
+    }
+
+    private Result OnAccountAuthenticated(AccountAuthenticated @event)
+    {
+        this.FailedLoginAttemptsCounter = default;
+        this.LastLoginAttempt = @event.Timestamp;
+
+        return Result.Completed();
+    }
+
+    private Result OnTwoFactorAuthenticationRequired()
+    {
+        return Result.Completed();
     }
 
     private Result OnAccountActivated()
@@ -394,22 +586,6 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
         }
 
         this.State = AccountStates.DEACTIVATED;
-
-        return Result.Completed();
-    }
-
-    private Result OnAccountRestricted()
-    {
-        if (this.Removed)
-        {
-            return Result.Terminated(ResultCodes.ARCHIVED);
-        }
-        else if (!this.ValidateStateTransition(AccountStates.RESTRICTED, out Result result))
-        {
-            return result;
-        }
-
-        this.State = AccountStates.RESTRICTED;
 
         return Result.Completed();
     }

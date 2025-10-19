@@ -8,19 +8,19 @@ using FxCore.Abstraction.Models;
 using FxCore.Abstraction.Services;
 using FxCore.Services.IAM.Shared.Roles;
 
-namespace FxCore.Services.IAM.Domain.Aggregates.Roles;
+namespace FxCore.Services.IAM.Domain.Events.Roles;
 
 /// <summary>
-/// Defines a domain event model for when a sensitivity flag is set on a role.
+/// Defines a domain event model for when a role is disabled.
 /// </summary>
-public sealed record SensitivityFlagSet : DomainEventBase
+public sealed record RoleDisabled : DomainEventBase
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="SensitivityFlagSet"/> class.
+    /// Initializes a new instance of the <see cref="RoleDisabled"/> class.
     /// </summary>
     /// <param name="dependencies">Domain event dependencies provider.</param>
     /// <param name="roleKey">The relevant role aggregate key.</param>
-    public SensitivityFlagSet(IEventDependenciesProvider dependencies, RoleKey roleKey)
+    public RoleDisabled(IEventDependenciesProvider dependencies, RoleKey roleKey)
         : base(dependencies)
     {
         this.RoleKey = roleKey;

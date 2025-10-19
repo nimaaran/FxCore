@@ -7,6 +7,7 @@
 using FxCore.Abstraction.Models;
 using FxCore.Abstraction.Services;
 using FxCore.Abstraction.Types;
+using FxCore.Services.IAM.Domain.Events.Roles;
 using FxCore.Services.IAM.Domain.Services;
 using FxCore.Services.IAM.Shared.Roles;
 

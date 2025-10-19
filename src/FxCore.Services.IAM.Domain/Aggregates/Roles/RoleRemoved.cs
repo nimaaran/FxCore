@@ -5,6 +5,7 @@
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
 using FxCore.Abstraction.Models;
+using FxCore.Abstraction.Services;
 using FxCore.Services.IAM.Shared.Roles;
 
 namespace FxCore.Services.IAM.Domain.Aggregates.Roles;
@@ -12,11 +13,21 @@ namespace FxCore.Services.IAM.Domain.Aggregates.Roles;
 /// <summary>
 /// Defines a domain event model for when a role is removed.
 /// </summary>
-/// <param name="TrackingKey">The event tracking key.</param>
-/// <param name="Timestamp">The event timestamp.</param>
-/// <param name="Key">The role aggregate key.</param>
-public sealed record RoleRemoved(
-    string TrackingKey,
-    DateTimeOffset Timestamp,
-    RoleKey Key)
-    : IDomainEventModel;
+public sealed record RoleRemoved : DomainEventBase
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RoleRemoved"/> class.
+    /// </summary>
+    /// <param name="dependencies">Domain event dependencies provider.</param>
+    /// <param name="roleKey">The relevant role aggregate key.</param>
+    public RoleRemoved(IEventDependenciesProvider dependencies, RoleKey roleKey)
+        : base(dependencies)
+    {
+        this.RoleKey = roleKey;
+    }
+
+    /// <summary>
+    /// Gets the relevant role aggregate key.
+    /// </summary>
+    public RoleKey RoleKey { get; }
+}

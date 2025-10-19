@@ -36,8 +36,7 @@ public sealed class Role : EventDrivenRootBase<long, RoleKey>
     }
 
     private Role(
-        IDateTimeService dateTimeService,
-        ITrackingKeyGenerator trackingKeyGenerator,
+        IEventDependenciesProvider dependencies,
         IRoleKeyGenerator roleKeyGenerator,
         string title,
         bool isSensitive,
@@ -45,16 +44,15 @@ public sealed class Role : EventDrivenRootBase<long, RoleKey>
         out Result result)
         : this(
             roleKey: roleKeyGenerator.Generate(),
-            @lock: AggregateLock.Create(dateTimeService.Now()))
+            @lock: AggregateLock.Create(dependencies.DateTimeService.Now()))
     {
         var @event = new RoleDefined(
-            TrackingKey: trackingKeyGenerator.Generate(),
-            Timestamp: this.Lock.Timestamp,
-            Key: this.Key,
-            Title: title,
-            IsSensitive: isSensitive,
-            Type: type,
-            State: RoleStates.ENABLED);
+            dependencies: dependencies,
+            roleKey: this.Key,
+            title: title,
+            isSensitive: isSensitive,
+            type: type,
+            state: RoleStates.ENABLED);
 
         result = this.ApplyEvent(@event: @event, isNew: true);
     }
@@ -83,8 +81,9 @@ public sealed class Role : EventDrivenRootBase<long, RoleKey>
     /// <summary>
     /// Defines a new role.
     /// </summary>
-    /// <param name="dateTimeService">A date and time service provider.</param>
-    /// <param name="trackingKeyGenerator">A tracking key generator service provider.</param>
+    /// <param name="dependencies">
+    /// An object that provides required dependencies for creating domain events.
+    /// </param>
     /// <param name="roleKeyGenerator">A role key generator service.</param>
     /// <param name="roleTitle">The role title.</param>
     /// <param name="isSensitive">
@@ -93,15 +92,13 @@ public sealed class Role : EventDrivenRootBase<long, RoleKey>
     /// <param name="roleType">The role type.</param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
     public static Result Define(
-        IDateTimeService dateTimeService,
-        ITrackingKeyGenerator trackingKeyGenerator,
+        IEventDependenciesProvider dependencies,
         IRoleKeyGenerator roleKeyGenerator,
         string roleTitle,
         bool isSensitive,
         RoleTypes roleType)
     {
-        if (dateTimeService is null ||
-            trackingKeyGenerator is null ||
+        if (dependencies is null ||
             roleKeyGenerator is null ||
             string.IsNullOrWhiteSpace(roleTitle))
         {
@@ -109,8 +106,7 @@ public sealed class Role : EventDrivenRootBase<long, RoleKey>
         }
 
         _ = new Role(
-                dateTimeService,
-                trackingKeyGenerator,
+                dependencies,
                 roleKeyGenerator,
                 roleTitle,
                 isSensitive,
@@ -123,21 +119,20 @@ public sealed class Role : EventDrivenRootBase<long, RoleKey>
     /// <summary>
     /// Enables the role.
     /// </summary>
-    /// <param name="dateTimeService">A date and time service provider.</param>
-    /// <param name="trackingKeyGenerator">A tracking key generator service provider.</param>
+    /// <param name="dependencies">
+    /// An object that provides required dependencies for creating domain events.
+    /// </param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
-    public Result Enable(IDateTimeService dateTimeService, ITrackingKeyGenerator trackingKeyGenerator)
+    public Result Enable(IEventDependenciesProvider dependencies)
     {
-        if (dateTimeService is null ||
-            trackingKeyGenerator is null)
+        if (dependencies is null)
         {
             return Result.Terminated(ResultCodes.BAD_REQUEST);
         }
 
         var @event = new RoleEnabled(
-            TrackingKey: trackingKeyGenerator.Generate(),
-            Timestamp: dateTimeService.Now(),
-            Key: this.Key);
+            dependencies: dependencies,
+            roleKey: this.Key);
 
         return this.ApplyEvent(@event: @event, isNew: true);
     }
@@ -145,23 +140,20 @@ public sealed class Role : EventDrivenRootBase<long, RoleKey>
     /// <summary>
     /// Disables the role.
     /// </summary>
-    /// <param name="dateTimeService">A date and time service provider.</param>
-    /// <param name="trackingKeyGenerator">A tracking key generator service provider.</param>
+    /// <param name="dependencies">
+    /// An object that provides required dependencies for creating domain events.
+    /// </param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
-    public Result Disable(
-        IDateTimeService dateTimeService,
-        ITrackingKeyGenerator trackingKeyGenerator)
+    public Result Disable(IEventDependenciesProvider dependencies)
     {
-        if (dateTimeService is null ||
-            trackingKeyGenerator is null)
+        if (dependencies is null)
         {
             return Result.Terminated(ResultCodes.BAD_REQUEST);
         }
 
         var @event = new RoleDisabled(
-            TrackingKey: trackingKeyGenerator.Generate(),
-            Timestamp: dateTimeService.Now(),
-            Key: this.Key);
+            dependencies: dependencies,
+            roleKey: this.Key);
 
         return this.ApplyEvent(@event: @event, isNew: true);
     }
@@ -169,23 +161,20 @@ public sealed class Role : EventDrivenRootBase<long, RoleKey>
     /// <summary>
     /// Removes the role.
     /// </summary>
-    /// <param name="dateTimeService">A date and time service provider.</param>
-    /// <param name="trackingKeyGenerator">A tracking key generator service provider.</param>
+    /// <param name="dependencies">
+    /// An object that provides required dependencies for creating domain events.
+    /// </param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
-    public Result Remove(
-        IDateTimeService dateTimeService,
-        ITrackingKeyGenerator trackingKeyGenerator)
+    public Result Remove(IEventDependenciesProvider dependencies)
     {
-        if (dateTimeService is null ||
-            trackingKeyGenerator is null)
+        if (dependencies is null)
         {
             return Result.Terminated(ResultCodes.BAD_REQUEST);
         }
 
         var @event = new RoleRemoved(
-            TrackingKey: trackingKeyGenerator.Generate(),
-            Timestamp: dateTimeService.Now(),
-            Key: this.Key);
+            dependencies: dependencies,
+            roleKey: this.Key);
 
         return this.ApplyEvent(@event: @event, isNew: true);
     }
@@ -193,23 +182,20 @@ public sealed class Role : EventDrivenRootBase<long, RoleKey>
     /// <summary>
     /// Sets the <see cref="IsSensitive"/> flag.
     /// </summary>
-    /// <param name="dateTimeService">A date and time service provider.</param>
-    /// <param name="trackingKeyGenerator">A tracking key generator service provider.</param>
+    /// <param name="dependencies">
+    /// An object that provides required dependencies for creating domain events.
+    /// </param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
-    public Result SetSensitivity(
-        IDateTimeService dateTimeService,
-        ITrackingKeyGenerator trackingKeyGenerator)
+    public Result SetSensitivity(IEventDependenciesProvider dependencies)
     {
-        if (dateTimeService is null ||
-            trackingKeyGenerator is null)
+        if (dependencies is null)
         {
             return Result.Terminated(ResultCodes.BAD_REQUEST);
         }
 
         var @event = new SensitivityFlagSet(
-            TrackingKey: trackingKeyGenerator.Generate(),
-            Timestamp: dateTimeService.Now(),
-            Key: this.Key);
+            dependencies: dependencies,
+            roleKey: this.Key);
 
         return this.ApplyEvent(@event: @event, isNew: true);
     }
@@ -217,23 +203,20 @@ public sealed class Role : EventDrivenRootBase<long, RoleKey>
     /// <summary>
     /// unsets the <see cref="IsSensitive"/> flag.
     /// </summary>
-    /// <param name="dateTimeService">A date and time service provider.</param>
-    /// <param name="trackingKeyGenerator">A tracking key generator service provider.</param>
+    /// <param name="dependencies">
+    /// An object that provides required dependencies for creating domain events.
+    /// </param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
-    public Result UnsetSensitivity(
-        IDateTimeService dateTimeService,
-        ITrackingKeyGenerator trackingKeyGenerator)
+    public Result UnsetSensitivity(IEventDependenciesProvider dependencies)
     {
-        if (dateTimeService is null ||
-            trackingKeyGenerator is null)
+        if (dependencies is null)
         {
             return Result.Terminated(ResultCodes.BAD_REQUEST);
         }
 
         var @event = new SensitivityFlagUnset(
-            TrackingKey: trackingKeyGenerator.Generate(),
-            Timestamp: dateTimeService.Now(),
-            Key: this.Key);
+            dependencies: dependencies,
+            roleKey: this.Key);
 
         return this.ApplyEvent(@event: @event, isNew: true);
     }

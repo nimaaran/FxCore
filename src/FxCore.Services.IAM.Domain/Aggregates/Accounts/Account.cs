@@ -425,7 +425,7 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
         var result = @event switch
         {
             AccountRegistered e => this.OnAccountRegistered(e),
-            AccountActivated e => this.OnAccountActivated(),
+            AccountActivated _ => this.OnAccountActivated(),
             AccountDeactivated _ => this.OnAccountDeactivated(),
             AccountClosed _ => this.OnAccountClosed(),
             AccountBanned _ => this.OnAccountBanned(),

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://raw.githubusercontent.com/DotNetAnalyzers/StyleCopAnalyzers/master/StyleCop.Analyzers/StyleCop.Analyzers/Settings/stylecop.schema.json",
+  "settings": {
+    "documentationRules": {
+      "companyName": "Hydrogen Developers Team",
+      "copyrightText": "┌──────────────────────────────────────────────────────────────────────────────────────────────┐\r\n│ALL RIGHTS RESERVED.                                                                          │\r\n│THIS FILE IS PART OF FXCORE FRAMEWORK AND DEVELOPED BY NIMA ARAN AND FXCORE CONTRIBUTORS TEAM.│\r\n│FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │\r\n└──────────────────────────────────────────────────────────────────────────────────────────────┘",
+      "documentationCulture": "en-US",
+      "documentExposedElements": true,
+      "documentInterfaces": true,
+      "documentInternalElements": false,
+      "documentPrivateElements": false,
+      "documentPrivateFields": false,
+      "fileNamingConvention": "stylecop",
+      "xmlHeader": false
+    },
+    "indentation": {
+      "indentationSize": 4,
+      "tabSize": 4,
+      "useTabs": false
+    },
+    "layoutRules": {
+      "allowConsecutiveUsings": true,
+      "allowDoWhileOnClosingBrace": false,
+      "newlineAtEndOfFile": "require"
+    },
+    "maintainabilityRules": {
+      "topLevelTypes": [ ]
+    },
+    "namingRules": {
+      "allowCommonHungarianPrefixes": true,
+      "allowedHungarianPrefixes": [],
+      "allowedNamespaceComponents": [],
+      "includeInferredTupleElementNames": false,
+      "tupleElementNameCasing": "PascalCase"
+    },
+    "orderingRules": {
+      "blankLinesBetweenUsingGroups": "omit",
+      "elementOrder": [ "kind", "accessibility", "readonly", "constant", "static" ],
+      "systemUsingDirectivesFirst": false,
+      "usingDirectivesPlacement": "outsideNamespace"
+    },
+    "readabilityRules": {
+      "allowBuiltInTypeAliases": false
+    },
+    "spacingRules": {
+    }
+  }
+}

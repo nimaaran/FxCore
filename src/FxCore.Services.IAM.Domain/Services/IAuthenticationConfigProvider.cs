@@ -38,4 +38,14 @@ public interface IAuthenticationConfigProvider : IDomainService
     /// second step in two-factor authentication.
     /// </summary>
     TimeSpan TwoFactorStepsGapDuration { get; }
+
+    /// <summary>
+    /// Gets the maximum lifetime of passwords.
+    /// </summary>
+    TimeSpan PasswordLifetime { get; }
+
+    /// <summary>
+    /// Gets the maximum lifetime of passcodes.
+    /// </summary>
+    TimeSpan PasscodeLifetime { get; }
 }

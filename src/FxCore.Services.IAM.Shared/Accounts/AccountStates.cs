@@ -26,7 +26,6 @@ public enum AccountStates : byte
     /// </summary>
     DEACTIVATED = 3,
 
-
     /// <summary>
     /// Indicates that the account is protected due to security reasons.
     /// </summary>

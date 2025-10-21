@@ -1,0 +1,6 @@
+@FxCore.Services.IAM.API_HostAddress = http://localhost:5073
+
+GET {{FxCore.Services.IAM.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

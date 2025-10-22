@@ -11,13 +11,13 @@ namespace FxCore.Abstraction.Handlers;
 /// <summary>
 /// Defines a contract for event handlers.
 /// </summary>
-/// <typeparam name="TDomainEventModel">Type of the domain event model.</typeparam>
-public interface IDomainEventHandler<TDomainEventModel> : IEventHandler
-    where TDomainEventModel : IDomainEventModel
+/// <typeparam name="TDomainEvent">Type of the domain event object.</typeparam>
+public interface IDomainEventHandler<TDomainEvent> : IEventHandler
+    where TDomainEvent : IDomainEvent
 {
     /// <summary>
     /// Handles a domain event.
     /// </summary>
     /// <param name="event">A domain event that should be handled.</param>
-    void Handle(TDomainEventModel @event);
+    void Handle(TDomainEvent @event);
 }

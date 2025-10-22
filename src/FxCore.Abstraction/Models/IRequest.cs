@@ -7,18 +7,6 @@
 namespace FxCore.Abstraction.Models;
 
 /// <summary>
-/// Defines a contract for defining query request models.
+/// Defines a marker interface for identifying all kinds of request models.
 /// </summary>
-public interface IQueryRequestModel : IRequestModel
-{
-    /// <summary>
-    /// Gets a value indicating how many records should be skipped from the start of top of the
-    /// list.
-    /// </summary>
-    int Skip { get; }
-
-    /// <summary>
-    /// Gets a value indicating how many records should be taken from the list.
-    /// </summary>
-    int Take { get; }
-}
+public interface IRequest : IMessage;

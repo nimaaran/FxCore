@@ -13,7 +13,7 @@ namespace FxCore.Abstraction.Persistence;
 /// </summary>
 /// <typeparam name="TEntity">The type of the entity.</typeparam>
 public interface IRecordCreatorRepository<in TEntity>
-    where TEntity : class, IEntityModel
+    where TEntity : class, IEntity
 {
     /// <summary>
     /// Sets the object in the data context for creating.

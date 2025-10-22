@@ -7,6 +7,6 @@
 namespace FxCore.Abstraction.Models;
 
 /// <summary>
-/// Defines a marker interface for identifying all kinds of request models.
+/// Defines a marker interface for identifying all kinds of command request models.
 /// </summary>
-public interface IRequestModel : IMessageModel;
+public interface ICommandRequest : IRequest;

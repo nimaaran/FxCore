@@ -33,7 +33,7 @@ public interface IDataContext
     /// <typeparam name="TEntity">The type of the entity.</typeparam>
     /// <param name="entity">The entity to add.</param>
     void Create<TEntity>(TEntity entity)
-        where TEntity : class, IEntityModel;
+        where TEntity : class, IEntity;
 
     /// <summary>
     /// Updates an entity in the context.
@@ -41,7 +41,7 @@ public interface IDataContext
     /// <typeparam name="TEntity">The type of the entity.</typeparam>
     /// <param name="entity">The entity to update.</param>
     void Update<TEntity>(TEntity entity)
-        where TEntity : class, IEntityModel;
+        where TEntity : class, IEntity;
 
     /// <summary>
     /// Removes an entity from the context.
@@ -49,7 +49,7 @@ public interface IDataContext
     /// <typeparam name="TEntity">The type of the entity.</typeparam>
     /// <param name="entity">The entity to remove.</param>
     void Delete<TEntity>(TEntity entity)
-        where TEntity : class, IEntityModel;
+        where TEntity : class, IEntity;
 
     /// <summary>
     /// Queries the context for a result.

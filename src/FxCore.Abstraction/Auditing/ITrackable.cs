@@ -7,17 +7,17 @@
 namespace FxCore.Abstraction.Auditing;
 
 /// <summary>
-/// Defines a contract for defining trackable and auditable objects.
+/// Defines a contract for the required attributes and behaviors of trackable objects.
 /// </summary>
 public interface ITrackable
 {
     /// <summary>
-    /// Gets the unique tracking key for the entity.
+    /// Gets the unique tracking key for the object.
     /// </summary>
     string TrackingKey { get; }
 
     /// <summary>
-    /// Gets the timestamp indicating when the entity was created or last modified.
+    /// Gets the timestamp indicating when the object was created or modified last time.
     /// </summary>
     DateTimeOffset Timestamp { get; }
 }

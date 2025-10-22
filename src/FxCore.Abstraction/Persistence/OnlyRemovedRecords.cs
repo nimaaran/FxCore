@@ -14,7 +14,7 @@ namespace FxCore.Abstraction.Persistence;
 /// </summary>
 /// <typeparam name="TEntity">The type of the entity.</typeparam>
 public sealed class OnlyRemovedRecords<TEntity> : Criterion<TEntity>
-    where TEntity : class, IEntityModel
+    where TEntity : class, IEntity
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="OnlyRemovedRecords{TEntity}"/> class.

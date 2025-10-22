@@ -7,6 +7,25 @@
 namespace FxCore.Abstraction.Models;
 
 /// <summary>
-/// Defines a marker interface for identifying all kinds of domain event models.
+/// Defines a contract for defining entity models.
 /// </summary>
-public interface IDomainEventModel : IEventModel;
+public interface IEntity : IDataModel
+{
+    /// <summary>
+    /// Gets a value indicating whether the entity object is removed or not.
+    /// </summary>
+    bool Removed { get; }
+}
+
+/// <summary>
+/// Defines a contract for defining entity models.
+/// </summary>
+/// <typeparam name="TId">Type of the entity id.</typeparam>
+public interface IEntity<TId> : IEntity
+    where TId : notnull
+{
+    /// <summary>
+    /// Gets the entity id.
+    /// </summary>
+    TId Id { get; }
+}

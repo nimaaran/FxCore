@@ -9,38 +9,41 @@ using FxCore.Abstraction.Models;
 namespace FxCore.Abstraction.Handlers;
 
 /// <summary>
-/// Defines a contract for asynchronous command requests handlers.
+/// Defines a contract for the required attributes and behaviors of asynchronous command handlers.
 /// </summary>
-/// <typeparam name="TCommandRequestModel">Type of the command request object.</typeparam>
-public interface IAsyncCommandHandler<TCommandRequestModel> : IRequestHandler
-    where TCommandRequestModel : ICommandRequestModel
+/// <typeparam name="TCommandRequest">Type of the command object.</typeparam>
+public interface IAsyncCommandHandler<TCommandRequest> : IRequestHandler
+    where TCommandRequest : ICommandRequest
 {
     /// <summary>
-    /// Handles the command request.
+    /// Handles the command.
     /// </summary>
-    /// <param name="command">The command request that should be hanlded.</param>
+    /// <param name="command">The command object that should be hanlded.</param>
     /// <param name="cancellationToken">See <see cref="CancellationToken"/>.</param>
-    /// <returns>An async operation.</returns>
+    /// <returns>An async operation without any outcome.</returns>
     Task HandleAsync(
-        TCommandRequestModel command,
+        TCommandRequest command,
         CancellationToken cancellationToken);
 }
 
 /// <summary>
-/// Defines a contract for asynchronous command requests handlers.
+/// Defines a contract for the required attributes and behaviors of asynchronous command handlers.
 /// </summary>
-/// <typeparam name="TCommandRequestModel">Type of the command request object.</typeparam>
-/// <typeparam name="TOutcome">Type of the handler outcome.</typeparam>
-public interface IAsyncCommandHandler<TCommandRequestModel, TOutcome> : IRequestHandler
-    where TCommandRequestModel : ICommandRequestModel
+/// <typeparam name="TCommandRequest">Type of the command object.</typeparam>
+/// <typeparam name="TOutcome">Type of the handler's outcome.</typeparam>
+public interface IAsyncCommandHandler<TCommandRequest, TOutcome> : IRequestHandler
+    where TCommandRequest : ICommandRequest
 {
     /// <summary>
-    /// Handles the command request and produces an outcome.
+    /// Handles the command.
     /// </summary>
-    /// <param name="command">The command request that should be handled.</param>
+    /// <param name="command">The command object that should be handled.</param>
     /// <param name="cancellationToken">See <see cref="CancellationToken"/>.</param>
-    /// <returns>An async operation that productes an outcome object.</returns>
-    Task<ICommandResponseModel<TOutcome>> HandleAsync(
-        TCommandRequestModel command,
+    /// <returns>
+    /// An async operation that productes a response as type of
+    /// <see cref="ICommandResponse{TOutcome}"/>.
+    /// </returns>
+    Task<ICommandResponse<TOutcome>> HandleAsync(
+        TCommandRequest command,
         CancellationToken cancellationToken);
 }

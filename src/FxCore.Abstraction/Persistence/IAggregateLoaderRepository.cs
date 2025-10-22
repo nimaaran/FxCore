@@ -4,28 +4,24 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-namespace FxCore.Abstraction.Models;
+using FxCore.Abstraction.Models;
+
+namespace FxCore.Abstraction.Persistence;
 
 /// <summary>
-/// Defines a contract for defining entity models.
+/// Represents a repository object that can load an aggregate by it's key.
 /// </summary>
-public interface IEntityModel : IDataModel
+/// <typeparam name="TAggregateRoot">The type of the aggregate root model.</typeparam>
+/// <typeparam name="TKey">The type of the aggregate key.</typeparam>
+public interface IAggregateLoaderRepository<TAggregateRoot, in TKey>
+    where TAggregateRoot : class, IAggregateRoot
+    where TKey : IAggregateKey
 {
     /// <summary>
-    /// Gets a value indicating whether the entity object is removed or not.
+    /// Retrieves an aggregate root.
     /// </summary>
-    bool Removed { get; }
-}
-
-/// <summary>
-/// Defines a contract for defining entity models.
-/// </summary>
-/// <typeparam name="TId">Type of the entity id.</typeparam>
-public interface IEntityModel<TId> : IEntityModel
-    where TId : notnull
-{
-    /// <summary>
-    /// Gets the entity id.
-    /// </summary>
-    TId Id { get; }
+    /// <param name="key">The key of the desired aggregate root.</param>
+    /// <param name="cancellationToken">See the <see cref="CancellationToken"/>.</param>
+    /// <returns>An aggregate root.</returns>
+    Task<TAggregateRoot?> LoadAsync(TKey key, CancellationToken cancellationToken);
 }

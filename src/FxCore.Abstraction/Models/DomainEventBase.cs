@@ -11,7 +11,7 @@ namespace FxCore.Abstraction.Models;
 /// <summary>
 /// Defines the base implementation for all domain event models.
 /// </summary>
-public abstract record class DomainEventBase : IDomainEventModel
+public abstract record class DomainEventBase : IDomainEvent
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="DomainEventBase"/> class.

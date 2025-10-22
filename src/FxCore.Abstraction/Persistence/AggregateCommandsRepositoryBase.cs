@@ -9,34 +9,32 @@ using FxCore.Abstraction.Models;
 namespace FxCore.Abstraction.Persistence;
 
 /// <summary>
-///     Implements a base class for transaction managers.
+/// As an abstract class, this class enforces basic CRUD operations for repository service
+/// providers.
 /// </summary>
-/// <param name="dataContext">A data context service provider.</param>
-public abstract class TransactionContextBase(IDataContext dataContext) : ITransactionContext
+/// <typeparam name="TAggregateRoot">
+/// The type of entity this repository manages. Must implement IEntity.
+/// </typeparam>
+/// <typeparam name="TKey">The aggregate key type.</typeparam>
+public abstract class AggregateCommandsRepositoryBase<TAggregateRoot, TKey> :
+    IRecordCreatorRepository<TAggregateRoot>,
+    IRecordRemoverRepository<TAggregateRoot>,
+    IRecordUpdaterRepository<TAggregateRoot>,
+    IAggregateLoaderRepository<TAggregateRoot, TKey>
+    where TAggregateRoot : class, IAggregateRoot
+    where TKey : IAggregateKey
 {
     /// <inheritdoc/>
-    public virtual async Task<int> CommitAsync(CancellationToken token)
-    {
-        var trackedObjects = dataContext.GetTrackedObject();
+    public abstract void Create(TAggregateRoot @object);
 
-        List<IDomainEvent> events = [];
+    /// <inheritdoc/>
+    public abstract void Delete(TAggregateRoot @object);
 
-        foreach (var obj in trackedObjects)
-        {
-            if (obj is IEventDrivenRoot aggregateRoot)
-            {
-                events.AddRange(aggregateRoot.UncommittedEvents);
-            }
-        }
+    /// <inheritdoc/>
+    public abstract void Update(TAggregateRoot @object);
 
-        var affectedRowsCount = await dataContext.SaveChangesAsync(token);
-
-        if (affectedRowsCount > 0)
-        {
-            // TODO: raise the events
-            throw new NotImplementedException();
-        }
-
-        return affectedRowsCount;
-    }
+    /// <inheritdoc/>
+    public abstract Task<TAggregateRoot?> LoadAsync(
+        TKey key,
+        CancellationToken cancellationToken);
 }

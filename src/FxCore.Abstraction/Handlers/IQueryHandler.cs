@@ -9,17 +9,19 @@ using FxCore.Abstraction.Models;
 namespace FxCore.Abstraction.Handlers;
 
 /// <summary>
-/// Defines a contract for query requests handlers.
+/// Defines a contract for query handlers.
 /// </summary>
-/// <typeparam name="TQueryRequestModel">Type of the query request object.</typeparam>
-/// <typeparam name="TOutcome">Type of the handler outcome.</typeparam>
-public interface IQueryHandler<TQueryRequestModel, TOutcome> : IRequestHandler
-    where TQueryRequestModel : IQueryRequestModel
+/// <typeparam name="TQueryRequest">Type of the query object.</typeparam>
+/// <typeparam name="TOutcome">Type of the handler's outcome.</typeparam>
+public interface IQueryHandler<TQueryRequest, TOutcome> : IRequestHandler
+    where TQueryRequest : IQueryRequest
 {
     /// <summary>
-    /// Handles a query request and produces an outcome.
+    /// Handles a query.
     /// </summary>
-    /// <param name="query">The query request that should be handled.</param>
-    /// <returns>The outcome of the operation.</returns>
-    IQueryResponseModel<TOutcome> Handle(TQueryRequestModel query);
+    /// <param name="query">The query that should be handled.</param>
+    /// <returns>
+    /// The response of the operation as type of <see cref="IQueryResponse{TOutcome}"/>.
+    /// </returns>
+    IQueryResponse<TOutcome> Handle(TQueryRequest query);
 }

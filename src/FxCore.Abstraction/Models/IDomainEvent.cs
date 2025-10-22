@@ -4,20 +4,9 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Abstraction.Models;
-
-namespace FxCore.Abstraction.Persistence;
+namespace FxCore.Abstraction.Models;
 
 /// <summary>
-/// Represents a repository object that can update a record.
+/// Defines a marker interface for identifying all kinds of domain event models.
 /// </summary>
-/// <typeparam name="TEntity">The type of the entity.</typeparam>
-public interface IRecordUpdaterRepository<in TEntity>
-    where TEntity : class, IEntity
-{
-    /// <summary>
-    /// Sets the object in the data context for updating.
-    /// </summary>
-    /// <param name="object">The object that should be tracked and updated.</param>
-    void Update(TEntity @object);
-}
+public interface IDomainEvent : IEvent;

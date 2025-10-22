@@ -14,7 +14,7 @@ namespace FxCore.Abstraction.Models;
 /// <typeparam name="TId">Type of the entity id.</typeparam>
 /// <param name="id">The id of an object.</param>
 /// <param name="removed">A flag indicating whether the object is removed or not.</param>
-public abstract class EntityBase<TId>(TId id, bool removed) : IEntityModel<TId>
+public abstract class EntityBase<TId>(TId id, bool removed) : IEntity<TId>
     where TId : notnull
 {
     /// <summary>

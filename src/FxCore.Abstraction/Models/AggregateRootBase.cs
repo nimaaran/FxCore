@@ -21,7 +21,7 @@ public abstract class AggregateRootBase<TId, TKey>(
     TId id,
     TKey key,
     bool removed,
-    AggregateLock @lock) : EntityBase<TId>(id, removed), IAggregateRootModel<TId, TKey>
+    AggregateLock @lock) : EntityBase<TId>(id, removed), IAggregateRoot<TId, TKey>
     where TId : notnull
     where TKey : notnull, IAggregateKey
 {

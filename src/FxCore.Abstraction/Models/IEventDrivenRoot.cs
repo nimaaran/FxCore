@@ -4,21 +4,32 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
+using FxCore.Abstraction.Types;
+
 namespace FxCore.Abstraction.Models;
 
 /// <summary>
-/// Defines a contract for defining query response models.
+/// Defines a contract for defining event-driven aggregate root models.
 /// </summary>
-/// <typeparam name="TOutcome">Type of the query list model.</typeparam>
-public interface IQueryResponseModel<TOutcome> : IResponseModel
+public interface IEventDrivenRoot : IAggregateRoot
 {
     /// <summary>
-    /// Gets the total count of the items available in the data source.
+    /// Gets a readonly list of uncommitted domain events.
     /// </summary>
-    long Total { get; }
+    IReadOnlyCollection<IDomainEvent> UncommittedEvents { get; }
 
     /// <summary>
-    /// Gets a readonly list of the response objects.
+    /// Commits the current lock and clears the uncommitted events.
     /// </summary>
-    IReadOnlyCollection<TOutcome> Result { get; }
+    /// <param name="currentLock">The current aggregate lock before committing events.</param>
+    /// <returns>An object as type of <see cref="Result"/>.</returns>
+    Result Commit(AggregateLock currentLock);
+
+    /// <summary>
+    /// Reloads an object by parsing a JSON snapshot and applies newer events after that.
+    /// </summary>
+    /// <param name="snapshot">An snapshot of the aggregate as type of JSON.</param>
+    /// <param name="events">Those event that were committed after generating snapshot.</param>
+    /// <returns>An object as type of <see cref="Result"/>.</returns>
+    Result Rehydrate(string snapshot, IEnumerable<IDomainEvent> events);
 }

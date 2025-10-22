@@ -9,20 +9,23 @@ using FxCore.Abstraction.Models;
 namespace FxCore.Abstraction.Handlers;
 
 /// <summary>
-/// Defines a contract for asynchronous query requests handlers.
+/// Defines a contract for the required attributes and behaviors of asynchronous query handlers.
 /// </summary>
-/// <typeparam name="TQueryRequestModel">Type of the query request object.</typeparam>
-/// <typeparam name="TOutcome">Type of the handler outcome.</typeparam>
-public interface IAsyncQueryHandler<TQueryRequestModel, TOutcome> : IRequestHandler
-    where TQueryRequestModel : IQueryRequestModel
+/// <typeparam name="TQueryRequest">Type of the query object.</typeparam>
+/// <typeparam name="TOutcome">Type of the handler's outcome.</typeparam>
+public interface IAsyncQueryHandler<TQueryRequest, TOutcome> : IRequestHandler
+    where TQueryRequest : IQueryRequest
 {
     /// <summary>
-    /// Handles a query request and produces an outcome.
+    /// Handles a query.
     /// </summary>
-    /// <param name="query">The query request that should be handled.</param>
+    /// <param name="query">The query object that should be handled.</param>
     /// <param name="cancellationToken">See <see cref="CancellationToken"/>.</param>
-    /// <returns>An async operation that productes an outcome object.</returns>
-    Task<IQueryResponseModel<TOutcome>> HandleAsync(
-        TQueryRequestModel query,
+    /// <returns>
+    /// An async operation that productes a response as type of
+    /// <see cref="IQueryResponse{TOutcome}"/>.
+    /// </returns>
+    Task<IQueryResponse<TOutcome>> HandleAsync(
+        TQueryRequest query,
         CancellationToken cancellationToken);
 }

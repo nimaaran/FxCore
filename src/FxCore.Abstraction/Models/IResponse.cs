@@ -7,6 +7,6 @@
 namespace FxCore.Abstraction.Models;
 
 /// <summary>
-/// Defines a marker interface for identifying all kinds of event models.
+/// Defines a marker interface for identifying all kinds of response models.
 /// </summary>
-public interface IEventModel : IMessageModel;
+public interface IResponse : IDataModel;

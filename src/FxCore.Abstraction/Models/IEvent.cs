@@ -7,13 +7,6 @@
 namespace FxCore.Abstraction.Models;
 
 /// <summary>
-/// Defines a contract for defining command response models.
+/// Defines a marker interface for identifying all kinds of event models.
 /// </summary>
-/// <typeparam name="TOutcome">Type of the response model.</typeparam>
-public interface ICommandResponseModel<TOutcome> : IResponseModel
-{
-    /// <summary>
-    /// Gets the response object.
-    /// </summary>
-    TOutcome? Result { get; }
-}
+public interface IEvent : IMessage;

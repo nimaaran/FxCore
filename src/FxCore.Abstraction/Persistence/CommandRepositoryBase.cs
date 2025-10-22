@@ -21,7 +21,7 @@ public abstract class CommandRepositoryBase<TEntity>(
     IRecordReaderRepository<TEntity>,
     IRecordUpdaterRepository<TEntity>,
     IRecordRemoverRepository<TEntity>
-    where TEntity : class, IEntityModel
+    where TEntity : class, IEntity
 {
     /// <inheritdoc/>
     public void Create(TEntity @object)

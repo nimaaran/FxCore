@@ -9,17 +9,17 @@ using FxCore.Abstraction.Models;
 namespace FxCore.Abstraction.Handlers;
 
 /// <summary>
-/// Defines a contract for asynchronous event handlers.
+/// Defines a contract for the required attributes and behaviors of asynchronous event handlers.
 /// </summary>
-/// <typeparam name="TDomainEventModel">Type of the domain event model.</typeparam>
-public interface IAsyncDomainEventHandler<TDomainEventModel> : IEventHandler
-    where TDomainEventModel : IDomainEventModel
+/// <typeparam name="TDomainEvent">Type of the domain event object.</typeparam>
+public interface IAsyncDomainEventHandler<TDomainEvent> : IEventHandler
+    where TDomainEvent : IDomainEvent
 {
     /// <summary>
     /// Handles a domain event.
     /// </summary>
-    /// <param name="event">A domain event that should be handled.</param>
+    /// <param name="event">A domain event object that should be handled.</param>
     /// <param name="cancellationToken">See <see cref="CancellationToken"/>.</param>
-    /// <returns>An async operation.</returns>
-    Task HandleAsync(TDomainEventModel @event, CancellationToken cancellationToken);
+    /// <returns>An async operation without any outcome.</returns>
+    Task HandleAsync(TDomainEvent @event, CancellationToken cancellationToken);
 }

@@ -7,6 +7,18 @@
 namespace FxCore.Abstraction.Models;
 
 /// <summary>
-/// Defines a marker interface for identifying all kinds of response models.
+/// Defines a contract for defining query request models.
 /// </summary>
-public interface IResponseModel : IDataModel;
+public interface IQueryRequest : IRequest
+{
+    /// <summary>
+    /// Gets a value indicating how many records should be skipped from the start of top of the
+    /// list.
+    /// </summary>
+    int Skip { get; }
+
+    /// <summary>
+    /// Gets a value indicating how many records should be taken from the list.
+    /// </summary>
+    int Take { get; }
+}

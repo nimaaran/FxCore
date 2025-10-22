@@ -4,9 +4,11 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
+using FxCore.Abstraction.Auditing;
+
 namespace FxCore.Abstraction.Models;
 
 /// <summary>
-/// Defines a marker interface for identifying all kinds of command request models.
+/// Defines a marker interface for identifying all kinds of message models.
 /// </summary>
-public interface ICommandRequestModel : IRequestModel;
+public interface IMessage : ITrackable, IDataModel;

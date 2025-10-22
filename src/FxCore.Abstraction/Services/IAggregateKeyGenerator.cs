@@ -11,10 +11,10 @@ namespace FxCore.Abstraction.Services;
 /// <summary>
 /// Defines a contract for aggregate key generator service providers.
 /// </summary>
-/// <typeparam name="TAggregateRootModel">Type of the aggregate root.</typeparam>
+/// <typeparam name="TAggregateRoot">Type of the aggregate root.</typeparam>
 /// <typeparam name="TAggregateKey">Type of the aggregate key.</typeparam>
-public interface IAggregateKeyGenerator<TAggregateRootModel, TAggregateKey> : IDomainService
-    where TAggregateRootModel : IAggregateRootModel
+public interface IAggregateKeyGenerator<TAggregateRoot, TAggregateKey> : IDomainService
+    where TAggregateRoot : IAggregateRoot
     where TAggregateKey : IAggregateKey
 {
     /// <summary>

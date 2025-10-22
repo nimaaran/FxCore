@@ -9,27 +9,27 @@ using FxCore.Abstraction.Types;
 namespace FxCore.Abstraction.Models;
 
 /// <summary>
-/// Defines a contract for defining event-driven aggregate root models.
+/// Defines a contract for defining and identifying aggregate root types.
 /// </summary>
-public interface IEventDrivenRootModel : IAggregateRootModel
+public interface IAggregateRoot : IEntity
 {
     /// <summary>
-    /// Gets a readonly list of uncommitted domain events.
+    /// Gets the aggregate key.
     /// </summary>
-    IReadOnlyCollection<IDomainEventModel> UncommittedEvents { get; }
+    AggregateLock Lock { get; }
+}
 
+/// <summary>
+/// Defines a contract for defining aggregate root types.
+/// </summary>
+/// <typeparam name="TId">Type of the aggregate root id.</typeparam>
+/// <typeparam name="TKey">Type of the aggregate key.</typeparam>
+public interface IAggregateRoot<TId, TKey> : IAggregateRoot, IEntity<TId>
+    where TId : notnull
+    where TKey : notnull, IAggregateKey
+{
     /// <summary>
-    /// Commits the current lock and clears the uncommitted events.
+    /// Gets the aggregate key.
     /// </summary>
-    /// <param name="currentLock">The current aggregate lock before committing events.</param>
-    /// <returns>An object as type of <see cref="Result"/>.</returns>
-    Result Commit(AggregateLock currentLock);
-
-    /// <summary>
-    /// Reloads an object by parsing a JSON snapshot and applies newer events after that.
-    /// </summary>
-    /// <param name="snapshot">An snapshot of the aggregate as type of JSON.</param>
-    /// <param name="events">Those event that were committed after generating snapshot.</param>
-    /// <returns>An object as type of <see cref="Result"/>.</returns>
-    Result Rehydrate(string snapshot, IEnumerable<IDomainEventModel> events);
+    TKey Key { get; }
 }

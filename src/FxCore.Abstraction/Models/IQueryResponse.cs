@@ -4,11 +4,21 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Abstraction.Auditing;
-
 namespace FxCore.Abstraction.Models;
 
 /// <summary>
-/// Defines a marker interface for identifying all kinds of message models.
+/// Defines a contract for defining query response models.
 /// </summary>
-public interface IMessageModel : ITrackable, IDataModel;
+/// <typeparam name="TOutcome">Type of the query list model.</typeparam>
+public interface IQueryResponse<TOutcome> : IResponse
+{
+    /// <summary>
+    /// Gets the total count of the items available in the data source.
+    /// </summary>
+    long Total { get; }
+
+    /// <summary>
+    /// Gets a readonly list of the response objects.
+    /// </summary>
+    IReadOnlyCollection<TOutcome> Result { get; }
+}

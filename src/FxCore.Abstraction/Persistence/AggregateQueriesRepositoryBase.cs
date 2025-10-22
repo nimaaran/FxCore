@@ -9,40 +9,30 @@ using FxCore.Abstraction.Models;
 namespace FxCore.Abstraction.Persistence;
 
 /// <summary>
-/// As an abstract class, this class enforces basic CRUD operations for repository service
+/// As an abstract class, this class enforces basic query operations for repository service
 /// providers.
 /// </summary>
-/// <typeparam name="TEntity">
+/// <typeparam name="TAggregateRoot">
 /// The type of entity this repository manages. Must implement IEntity.
 /// </typeparam>
-public abstract class RepositoryBase<TEntity> :
-    IRecordCreatorRepository<TEntity>,
-    IRecordReaderRepository<TEntity>,
-    IRecordRemoverRepository<TEntity>,
-    IRecordsReaderRepository<TEntity>,
-    IRecordUpdaterRepository<TEntity>
-    where TEntity : class, IEntityModel
+/// <typeparam name="TKey">The aggregate key type.</typeparam>
+public abstract class AggregateQueriesRepositoryBase<TAggregateRoot, TKey> :
+    IRecordReaderRepository<TAggregateRoot>,
+    IRecordsReaderRepository<TAggregateRoot>
+    where TAggregateRoot : class, IAggregateRoot
+    where TKey : IAggregateKey
 {
     /// <inheritdoc/>
-    public abstract void Create(TEntity @object);
-
-    /// <inheritdoc/>
-    public abstract Task<TEntity?> ReadAsync(
-        IQueryable<TEntity> baseQuery,
-        ISpecification<TEntity> specification,
-        ISorter<TEntity> sorter,
+    public abstract Task<TAggregateRoot?> ReadAsync(
+        IQueryable<TAggregateRoot> baseQuery,
+        ISpecification<TAggregateRoot> specification,
+        ISorter<TAggregateRoot> sorter,
         CancellationToken token);
 
     /// <inheritdoc/>
-    public abstract Task<List<TEntity>> ReadAsync(
-        IQueryable<TEntity> baseQuery,
-        ISpecification<TEntity> specification,
-        IPager<TEntity> pager,
+    public abstract Task<List<TAggregateRoot>> ReadAsync(
+        IQueryable<TAggregateRoot> baseQuery,
+        ISpecification<TAggregateRoot> specification,
+        IPager<TAggregateRoot> pager,
         CancellationToken token);
-
-    /// <inheritdoc/>
-    public abstract void Delete(TEntity @object);
-
-    /// <inheritdoc/>
-    public abstract void Update(TEntity @object);
 }

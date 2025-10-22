@@ -9,31 +9,33 @@ using FxCore.Abstraction.Models;
 namespace FxCore.Abstraction.Handlers;
 
 /// <summary>
-/// Defines a contract for command requests handlers.
+/// DDefines a contract for the required attributes and behaviors of command handlers.
 /// </summary>
-/// <typeparam name="TCommandRequestModel">Type of the command request object.</typeparam>
-public interface ICommandHandler<TCommandRequestModel> : IRequestHandler
-    where TCommandRequestModel : ICommandRequestModel
+/// <typeparam name="TCommandRequest">Type of the command object.</typeparam>
+public interface ICommandHandler<TCommandRequest> : IRequestHandler
+    where TCommandRequest : ICommandRequest
 {
     /// <summary>
-    /// Handles the command request without producing any outcomes.
+    /// Handles the command.
     /// </summary>
-    /// <param name="command">The command request that should be handled.</param>
-    void Handle(TCommandRequestModel command);
+    /// <param name="command">The command object that should be handled.</param>
+    void Handle(TCommandRequest command);
 }
 
 /// <summary>
-/// Defines a contract for command requests handlers.
+/// Defines a contract for the required attributes and behaviors of command handlers.
 /// </summary>
-/// <typeparam name="TCommandRequestModel">Type of the command request object.</typeparam>
-/// <typeparam name="TOutcome">Type of the handler outcome.</typeparam>
-public interface ICommandHandler<TCommandRequestModel, TOutcome> : IRequestHandler
-    where TCommandRequestModel : ICommandRequestModel
+/// <typeparam name="TCommandRequest">Type of the command object.</typeparam>
+/// <typeparam name="TOutcome">Type of the handler's outcome.</typeparam>
+public interface ICommandHandler<TCommandRequest, TOutcome> : IRequestHandler
+    where TCommandRequest : ICommandRequest
 {
     /// <summary>
-    /// Handles the command request and produces an outcome.
+    /// Handles the command.
     /// </summary>
-    /// <param name="command">The command request that should be handled.</param>
-    /// <returns>The outcome of the operation.</returns>
-    ICommandResponseModel<TOutcome> Handle(TCommandRequestModel command);
+    /// <param name="command">The command object that should be handled.</param>
+    /// <returns>
+    /// The response of the operation as type of <see cref="ICommandResponse{TOutcome}"/>.
+    /// </returns>
+    ICommandResponse<TOutcome> Handle(TCommandRequest command);
 }

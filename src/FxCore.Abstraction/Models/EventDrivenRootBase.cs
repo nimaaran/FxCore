@@ -23,16 +23,16 @@ public abstract class EventDrivenRootBase<TId, TKey>(
     TKey key,
     bool removed,
     AggregateLock @lock)
-    : AggregateRootBase<TId, TKey>(id, key, removed, @lock), IEventDrivenRootModel
+    : AggregateRootBase<TId, TKey>(id, key, removed, @lock), IEventDrivenRoot
     where TId : notnull
     where TKey : notnull, IAggregateKey
 {
-    private readonly List<IDomainEventModel> uncommittedEvents = [];
+    private readonly List<IDomainEvent> uncommittedEvents = [];
 
     /// <summary>
     /// Gets a readonly list of uncommited events.
     /// </summary>
-    IReadOnlyCollection<IDomainEventModel> IEventDrivenRootModel.UncommittedEvents
+    IReadOnlyCollection<IDomainEvent> IEventDrivenRoot.UncommittedEvents
         => this.uncommittedEvents.AsReadOnly();
 
     /// <summary>
@@ -46,7 +46,7 @@ public abstract class EventDrivenRootBase<TId, TKey>(
         {
             if (this.uncommittedEvents.Count == 0)
             {
-                ReadOnlyCollection<IDomainEventModel> events = this.uncommittedEvents.AsReadOnly();
+                ReadOnlyCollection<IDomainEvent> events = this.uncommittedEvents.AsReadOnly();
                 this.uncommittedEvents.Clear();
                 this.UpdateLock(events.Count, events[^1].Timestamp);
                 return Result.Completed(events);
@@ -66,7 +66,7 @@ public abstract class EventDrivenRootBase<TId, TKey>(
     /// <param name="snapshot">An aggregate snapshot in JSON format.</param>
     /// <param name="events">Recent events that happened after latest snapshot creation.</param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
-    public Result Rehydrate(string snapshot, IEnumerable<IDomainEventModel> events)
+    public Result Rehydrate(string snapshot, IEnumerable<IDomainEvent> events)
     {
         if (!string.IsNullOrWhiteSpace(snapshot))
         {
@@ -93,7 +93,7 @@ public abstract class EventDrivenRootBase<TId, TKey>(
     /// </summary>
     /// <param name="event">An event that should be dispatched.</param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
-    protected virtual Result DispatchEvent(IDomainEventModel @event)
+    protected virtual Result DispatchEvent(IDomainEvent @event)
     {
         return Result.Terminated(
             code: ResultCodes.BAD_REQUEST,
@@ -106,7 +106,7 @@ public abstract class EventDrivenRootBase<TId, TKey>(
     /// <param name="event">The event that should be processed.</param>
     /// <param name="isNew">A flag indicating whether the event is new or we are reapplying it.</param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
-    protected Result ApplyEvent(IDomainEventModel @event, bool isNew)
+    protected Result ApplyEvent(IDomainEvent @event, bool isNew)
     {
         if (@event is null)
         {

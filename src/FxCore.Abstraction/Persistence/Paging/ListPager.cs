@@ -4,27 +4,30 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Abstraction.Models;
+using FxCore.Abstraction.Common.Models.Contracts;
+using FxCore.Abstraction.Persistence.Paging.Contracts;
+using FxCore.Abstraction.Persistence.Sorting.Contracts;
 
-namespace FxCore.Abstraction.Persistence;
+namespace FxCore.Abstraction.Persistence.Paging;
 
 /// <summary>
-/// Represents a paging configuration object that returns only the first record of the result.
+/// Implements a pager that splits records into different pages and return only records of a
+/// specified page.
 /// </summary>
 /// <typeparam name="TModel">The type of the query result data model.</typeparam>
-public class OnlyOnePager<TModel> : IPager<TModel>
+public class ListPager<TModel> : IPager<TModel>
     where TModel : class, IDataModel
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="OnlyOnePager{TModel}"/> class.
+    /// Initializes a new instance of the <see cref="ListPager{TModel}"/> class.
     /// </summary>
-    /// <param name="sorter">
-    /// The sorting configuration object that should be applied before paging.
-    /// </param>
-    public OnlyOnePager(ISorter<TModel> sorter)
+    /// <param name="pageSize">See <see cref="IPager{TModel}.PageSize"/>.</param>
+    /// <param name="pageIndex">See <see cref="IPager{TModel}.PageIndex"/>.</param>
+    /// <param name="sorter">See <see cref="IPager{TModel}.Sorter"/>.</param>
+    public ListPager(int pageSize, int pageIndex, ISorter<TModel> sorter)
     {
-        this.PageSize = 1;
-        this.PageIndex = 0;
+        this.PageSize = pageSize;
+        this.PageIndex = pageIndex;
         this.Sorter = sorter;
     }
 

@@ -4,27 +4,23 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Abstraction.Models;
+using FxCore.Abstraction.Events.Contracts;
 
-namespace FxCore.Abstraction.Persistence;
+namespace FxCore.Abstraction.Persistence.DataContexts.Contracts;
 
 /// <summary>
-/// Represents a query builder object that creates a query definition by using specifications,
-/// paging, and sorting configuration objects.
+/// Desines a contract for event-driven transaction managers according to the unity-of-work
+/// pattern.
 /// </summary>
-public interface IQueryBuilder
+public interface IEventDrivenTransactionContext
 {
     /// <summary>
-    /// Builds a queryable object.
+    /// Commits the transaction.
     /// </summary>
-    /// <param name="baseQuery">The source queryable collection of entities.</param>
-    /// <param name="specification">The specification to apply to the query.</param>
-    /// <param name="pager">The pager to apply to the query.</param>
-    /// <typeparam name="TModel">The type of the data model.</typeparam>
-    /// <returns>A queryable collection of entities.</returns>
-    IQueryable<TModel> Build<TModel>(
-        IQueryable<TModel> baseQuery,
-        ISpecification<TModel> specification,
-        IPager<TModel> pager)
-        where TModel : class, IDataModel;
+    /// <param name="token">See <see cref="CancellationToken"/>.</param>
+    /// <returns>
+    /// An async operation that returns a tupple that contains number of affected objects and
+    /// applied events in the transaction.
+    /// </returns>
+    Task<(int AffectedObjects, List<IDomainEvent> Events)> CommitAsync(CancellationToken token);
 }

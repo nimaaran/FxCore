@@ -4,20 +4,36 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Abstraction.Models;
+using FxCore.Abstraction.Common.Models.Contracts;
+using FxCore.Abstraction.Persistence.Paging.Contracts;
+using FxCore.Abstraction.Persistence.Sorting.Contracts;
 
-namespace FxCore.Abstraction.Persistence;
+namespace FxCore.Abstraction.Persistence.Paging;
 
 /// <summary>
-/// Represents a repository object that can update a record.
+/// Implements a pager that returns all records in a single page.
 /// </summary>
-/// <typeparam name="TEntity">The type of the entity.</typeparam>
-public interface IRecordUpdaterRepository<in TEntity>
-    where TEntity : class, IEntity
+/// <typeparam name="TModel">Type of the query result.</typeparam>
+public class AllInOnePager<TModel> : IPager<TModel>
+    where TModel : class, IDataModel
 {
     /// <summary>
-    /// Sets the object in the data context for updating.
+    /// Initializes a new instance of the <see cref="AllInOnePager{TModel}"/> class.
     /// </summary>
-    /// <param name="object">The object that should be tracked and updated.</param>
-    void Update(TEntity @object);
+    /// <param name="sorter">See <see cref="IPager{TModel}.Sorter"/>.</param>
+    public AllInOnePager(ISorter<TModel> sorter)
+    {
+        this.PageSize = 0;
+        this.PageIndex = 0;
+        this.Sorter = sorter;
+    }
+
+    /// <inheritdoc/>
+    public int PageSize { get; init; }
+
+    /// <inheritdoc/>
+    public int PageIndex { get; init; }
+
+    /// <inheritdoc/>
+    public ISorter<TModel> Sorter { get; init; }
 }

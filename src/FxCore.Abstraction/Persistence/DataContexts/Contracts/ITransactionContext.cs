@@ -4,17 +4,17 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Abstraction.Models;
-
-namespace FxCore.Abstraction.Persistence;
+namespace FxCore.Abstraction.Persistence.DataContexts.Contracts;
 
 /// <summary>
-/// Implements a base class for specification objects.
+/// Desines a contract for transaction managers according to the unity-of-work pattern.
 /// </summary>
-/// <typeparam name="TModel">The type of the data model.</typeparam>
-public abstract class SpecificationBase<TModel> : ISpecification<TModel>
-    where TModel : class, IDataModel
+public interface ITransactionContext
 {
-    /// <inheritdoc/>
-    public ICriterion<TModel>? Criterion { get; protected set; }
+    /// <summary>
+    /// Commits the transaction.
+    /// </summary>
+    /// <param name="token">See <see cref="CancellationToken"/>.</param>
+    /// <returns>An async operation that returns number of affected objects.</returns>
+    Task<int> CommitAsync(CancellationToken token);
 }

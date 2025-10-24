@@ -4,20 +4,36 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-namespace FxCore.Abstraction.Persistence;
+using FxCore.Abstraction.Common.Models.Contracts;
+using FxCore.Abstraction.Persistence.Paging.Contracts;
+using FxCore.Abstraction.Persistence.Sorting.Contracts;
+
+namespace FxCore.Abstraction.Persistence.Paging;
 
 /// <summary>
-/// Defines different operators that could be used to combine criteria.
+/// Implements a pager that returns only one record from the top of the list.
 /// </summary>
-public enum CriteriaOperators : byte
+/// <typeparam name="TModel">Type of the query result.</typeparam>
+public class OnlyOnePager<TModel> : IPager<TModel>
+    where TModel : class, IDataModel
 {
     /// <summary>
-    /// The OR operator.
+    /// Initializes a new instance of the <see cref="OnlyOnePager{TModel}"/> class.
     /// </summary>
-    OR = 1,
+    /// <param name="sorter">See <see cref="IPager{TModel}.Sorter"/>.</param>
+    public OnlyOnePager(ISorter<TModel> sorter)
+    {
+        this.PageSize = 1;
+        this.PageIndex = 0;
+        this.Sorter = sorter;
+    }
 
-    /// <summary>
-    /// The AND operator.
-    /// </summary>
-    AND = 2,
+    /// <inheritdoc/>
+    public int PageSize { get; init; }
+
+    /// <inheritdoc/>
+    public int PageIndex { get; init; }
+
+    /// <inheritdoc/>
+    public ISorter<TModel> Sorter { get; init; }
 }

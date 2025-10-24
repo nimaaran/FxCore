@@ -4,29 +4,20 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Abstraction.Persistence.DataContexts.Contracts;
-
-namespace FxCore.Abstraction.Persistence.DataContexts;
+namespace FxCore.Abstraction.Persistence.Specifications;
 
 /// <summary>
-/// Implements a base class for non event-driven-based transaction managers.
+/// Defines different operators that could be used to combine criteria.
 /// </summary>
-public abstract class TransactionContextBase : ITransactionContext
+public enum CriteriaOperators : byte
 {
-    private readonly IDataContext context;
+    /// <summary>
+    /// The OR operator.
+    /// </summary>
+    OR = 1,
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="TransactionContextBase"/> class.
+    /// The AND operator.
     /// </summary>
-    /// <param name="dataContext">A data context provider.</param>
-    protected TransactionContextBase(IDataContext dataContext)
-    {
-        this.context = dataContext;
-    }
-
-    /// <inheritdoc/>
-    public Task<int> CommitAsync(CancellationToken cancellationToken)
-    {
-        return this.context.SaveChangesAsync(cancellationToken);
-    }
+    AND = 2,
 }

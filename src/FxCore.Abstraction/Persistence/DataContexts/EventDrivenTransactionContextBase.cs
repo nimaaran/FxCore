@@ -38,11 +38,11 @@ public abstract class EventDrivenTransactionContextBase : IEventDrivenTransactio
 
         foreach (var obj in trackedObjects)
         {
-            if (obj is IEventDrivenRoot aggregateRoot)
+            if (obj is not null && obj is IEventDrivenRoot aggregateRoot)
             {
-                var commitResult = ((IEventDrivenRoot)obj).Commit(((IEventDrivenRoot)obj).Lock);
+                var commitResult = aggregateRoot.Commit(aggregateRoot.Lock);
 
-                if (commitResult.TryGetOutcome<List<IDomainEvent>>(out List<IDomainEvent>? committedEvents))
+                if (commitResult.TryGetOutcome(out List<IDomainEvent>? committedEvents))
                 {
                     events.AddRange(committedEvents!);
                 }

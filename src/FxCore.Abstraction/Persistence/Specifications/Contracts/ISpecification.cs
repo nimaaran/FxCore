@@ -4,29 +4,19 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Abstraction.Persistence.DataContexts.Contracts;
+using FxCore.Abstraction.Common.Models.Contracts;
 
-namespace FxCore.Abstraction.Persistence.DataContexts;
+namespace FxCore.Abstraction.Persistence.Specifications.Contracts;
 
 /// <summary>
-/// Implements a base class for non event-driven-based transaction managers.
+/// Defines a contract for domain specifications.
 /// </summary>
-public abstract class TransactionContextBase : ITransactionContext
+/// <typeparam name="TModel">Type of the data model.</typeparam>
+public interface ISpecification<TModel>
+    where TModel : class, IDataModel
 {
-    private readonly IDataContext context;
-
     /// <summary>
-    /// Initializes a new instance of the <see cref="TransactionContextBase"/> class.
+    /// Gets a criterion that should be used to define the specification.
     /// </summary>
-    /// <param name="dataContext">A data context provider.</param>
-    protected TransactionContextBase(IDataContext dataContext)
-    {
-        this.context = dataContext;
-    }
-
-    /// <inheritdoc/>
-    public Task<int> CommitAsync(CancellationToken cancellationToken)
-    {
-        return this.context.SaveChangesAsync(cancellationToken);
-    }
+    ICriterion<TModel>? Criterion { get; }
 }

@@ -4,29 +4,28 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Abstraction.Persistence.DataContexts.Contracts;
+using FxCore.Abstraction.Aggregates.Contracts;
 
-namespace FxCore.Abstraction.Persistence.DataContexts;
+namespace FxCore.Abstraction.Persistence.Specifications;
 
 /// <summary>
-/// Implements a base class for non event-driven-based transaction managers.
+/// Defines a specification for loading an active aggregate by its key.
 /// </summary>
-public abstract class TransactionContextBase : ITransactionContext
+/// <typeparam name="TRoot">Type of the aggregate.</typeparam>
+/// <typeparam name="TKey">The aggregate key type.</typeparam>
+public class LoadByKeySpecification<TRoot, TKey> : SpecificationBase<TRoot>
+    where TRoot : class, IAggregateRoot<TKey>
+    where TKey : notnull, IAggregateKey
 {
-    private readonly IDataContext context;
-
     /// <summary>
-    /// Initializes a new instance of the <see cref="TransactionContextBase"/> class.
+    /// Initializes a new instance of the <see cref="LoadByKeySpecification{TRoot,TKey}"/>
+    /// class.
     /// </summary>
-    /// <param name="dataContext">A data context provider.</param>
-    protected TransactionContextBase(IDataContext dataContext)
+    /// <param name="key">The desired aggregate's key.</param>
+    public LoadByKeySpecification(TKey key)
     {
-        this.context = dataContext;
-    }
-
-    /// <inheritdoc/>
-    public Task<int> CommitAsync(CancellationToken cancellationToken)
-    {
-        return this.context.SaveChangesAsync(cancellationToken);
+        this.Criterion = new Criterion<TRoot>()
+            .Set(r => r.Key.Equals(key))
+            .And(new OnlyActiveRecords<TRoot>());
     }
 }

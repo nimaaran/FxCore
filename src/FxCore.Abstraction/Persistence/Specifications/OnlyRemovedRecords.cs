@@ -4,29 +4,20 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Abstraction.Persistence.DataContexts.Contracts;
+using FxCore.Abstraction.Entities.Contracts;
 
-namespace FxCore.Abstraction.Persistence.DataContexts;
+namespace FxCore.Abstraction.Persistence.Specifications;
 
 /// <summary>
-/// Implements a base class for non event-driven-based transaction managers.
+/// Represents a criterion object that configs the query to return only removed records when
+/// the soft-delete removing is available.
 /// </summary>
-public abstract class TransactionContextBase : ITransactionContext
+/// <typeparam name="TEntity">Type of the entity.</typeparam>
+public sealed class OnlyRemovedRecords<TEntity> : Criterion<TEntity>
+    where TEntity : class, IEntity
 {
-    private readonly IDataContext context;
-
     /// <summary>
-    /// Initializes a new instance of the <see cref="TransactionContextBase"/> class.
+    /// Initializes a new instance of the <see cref="OnlyRemovedRecords{TEntity}"/> class.
     /// </summary>
-    /// <param name="dataContext">A data context provider.</param>
-    protected TransactionContextBase(IDataContext dataContext)
-    {
-        this.context = dataContext;
-    }
-
-    /// <inheritdoc/>
-    public Task<int> CommitAsync(CancellationToken cancellationToken)
-    {
-        return this.context.SaveChangesAsync(cancellationToken);
-    }
+    public OnlyRemovedRecords() => this.Set(r => r.Removed);
 }

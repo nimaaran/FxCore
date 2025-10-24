@@ -12,12 +12,12 @@ namespace FxCore.Services.IAM.Shared.Roles;
 public enum RoleStates : byte
 {
     /// <summary>
-    /// Indicates that the role is enabled and can be manipulated or used to authorize users.
+    /// Indicates that the role is enabled and can be used to authorize users.
     /// </summary>
     ENABLED = 1,
 
     /// <summary>
-    /// Indicates that the role is disabled and cannot be manipulated or used to authorize users.
+    /// Indicates that the role is disabled and cannot be used to authorize users.
     /// </summary>
     DISABLED = 2,
 }

@@ -4,12 +4,12 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Abstraction.Models;
+using FxCore.Abstraction.Aggregates;
 
 namespace FxCore.Services.IAM.Shared.Passports;
 
 /// <summary>
-/// Define an aggregate key for passports.
+/// Defines the passports aggregate key.
 /// </summary>
 /// <param name="Value"><inheritdoc/></param>
 public record class PassportKey(string Value) : AggregateKeyBase<string>(Value);

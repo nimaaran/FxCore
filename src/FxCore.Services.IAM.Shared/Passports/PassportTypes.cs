@@ -12,17 +12,17 @@ namespace FxCore.Services.IAM.Shared.Passports;
 public enum PassportTypes : byte
 {
     /// <summary>
-    /// Indicates that the passport is a basic username and password combination.
+    /// Indicates the passport is a basic username and password combination.
     /// </summary>
     BASIC = 1,
 
     /// <summary>
-    /// Indicates that the passport is based on an email address.
+    /// Indicates the passport is based on an email address and should be verified by OTP.
     /// </summary>
     EMAIL = 2,
 
     /// <summary>
-    /// Indicates that the passport is based on a phone number.
+    /// Indicates the passport is based on a phone number and should be verified by OTP.
     /// </summary>
     PHONE = 3,
 }

@@ -4,12 +4,12 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Abstraction.Models;
+using FxCore.Abstraction.Aggregates;
 
 namespace FxCore.Services.IAM.Shared.Roles;
 
 /// <summary>
-/// Define an aggregate key for roles.
+/// Defines the role aggregate key.
 /// </summary>
 /// <param name="Value"><inheritdoc/></param>
 public record class RoleKey(string Value) : AggregateKeyBase<string>(Value);

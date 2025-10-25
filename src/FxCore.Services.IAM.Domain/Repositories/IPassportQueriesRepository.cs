@@ -4,17 +4,15 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Abstraction.Persistence;
-using FxCore.Services.IAM.Domain.Aggregates.Accounts;
+using FxCore.Abstraction.Persistence.Repositories.Contracts;
+using FxCore.Services.IAM.Domain.Aggregates.Passports;
 
 namespace FxCore.Services.IAM.Domain.Repositories;
 
 /// <summary>
-/// Defines a contract for account aggregate repository.
+/// Defines a contract to define query methods of passport aggregate repositories.
 /// </summary>
-public interface IAccountRepository :
-    IRecordCreatorRepository<IAccount>,
-    IRecordUpdaterRepository<IAccount>,
-    IRecordRemoverRepository<IAccount>,
-    IRecordReaderRepository<IAccount>,
-    IRecordsReaderRepository<IAccount>;
+/// <typeparam name="TPassport">Type of the passport.</typeparam>
+public interface IPassportQueriesRepository<TPassport> :
+    IAggregateQueriesRepository<TPassport>
+    where TPassport : Passport<TPassport>;

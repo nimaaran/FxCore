@@ -4,11 +4,15 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Services.IAM.Domain.Aggregates.Passports;
+using FxCore.Abstraction.Persistence.Repositories.Contracts;
+using FxCore.Services.IAM.Domain.Aggregates.Roles;
 
-namespace FxCore.Services.IAM.Domain.Services;
+namespace FxCore.Services.IAM.Domain.Repositories;
 
 /// <summary>
-/// Defines a contract for basic passport key generators.
+/// Defines a contract to define query methods of role aggregate repositories.
 /// </summary>
-public interface IBasicPassportKeyGenerator : IPassportKeyGenerator<BasicPassport>;
+/// <typeparam name="TRole">Type of the passport.</typeparam>
+public interface IRoleQueriesRepository<TRole> :
+    IAggregateQueriesRepository<TRole>
+    where TRole : Role<TRole>;

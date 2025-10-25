@@ -4,11 +4,15 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Services.IAM.Domain.Aggregates.Accounts;
+using FxCore.Abstraction.Persistence.Repositories.Contracts;
+using FxCore.Services.IAM.Domain.Aggregates.Passports;
 
-namespace FxCore.Services.IAM.Domain.Services;
+namespace FxCore.Services.IAM.Domain.Repositories;
 
 /// <summary>
-/// Defines a contract for system account key generators.
+/// Defines a contract to define command methods of passport aggregate repositories.
 /// </summary>
-public interface ISystemAccountKeyGenerator : IAccountKeyGenerator<SystemAccount>;
+/// <typeparam name="TPassport">Type of the passport.</typeparam>
+public interface IPassportCommandsRepository<TPassport> :
+    IAggregateCommandsRepository<TPassport>
+    where TPassport : Passport<TPassport>;

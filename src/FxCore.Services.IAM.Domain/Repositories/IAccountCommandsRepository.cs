@@ -4,11 +4,15 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Services.IAM.Domain.Aggregates.Passports;
+using FxCore.Abstraction.Persistence.Repositories.Contracts;
+using FxCore.Services.IAM.Domain.Aggregates.Accounts;
 
-namespace FxCore.Services.IAM.Domain.Services;
+namespace FxCore.Services.IAM.Domain.Repositories;
 
 /// <summary>
-/// Defines a contract for phone passport key generators.
+/// Defines a contract to define command methods of account aggregate repositories.
 /// </summary>
-public interface IPhonePassportKeyGenerator : IPassportKeyGenerator<PhonePassport>;
+/// <typeparam name="TAccount">the account aggregate root type.</typeparam>
+public interface IAccountCommandsRepository<TAccount> :
+    IAggregateCommandsRepository<TAccount>
+    where TAccount : Account<TAccount>;

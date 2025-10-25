@@ -4,22 +4,22 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Abstraction.Models;
-using FxCore.Abstraction.Services;
+using FxCore.Abstraction.Events;
+using FxCore.Abstraction.Events.Contracts;
 using FxCore.Services.IAM.Shared.Accounts;
 
 namespace FxCore.Services.IAM.Domain.Events.Accounts;
 
 /// <summary>
-/// Defines an event model for when an account is registered.
+/// Defines the event that is raised when an account is registered.
 /// </summary>
 public sealed record AccountRegistered : DomainEventBase
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="AccountRegistered"/> class.
     /// </summary>
-    /// <param name="dependencies">Domain event dependencies provider.</param>
-    /// <param name="accountKey">The relevant account aggregate key.</param>
+    /// <param name="dependencies">See <see cref="IEventDependenciesProvider"/>.</param>
+    /// <param name="accountKey">See <see cref="AccountKey"/>.</param>
     /// <param name="displayName">The account display name.</param>
     /// <param name="type">Type of the account.</param>
     /// <param name="state">State of the account.</param>
@@ -38,22 +38,22 @@ public sealed record AccountRegistered : DomainEventBase
     }
 
     /// <summary>
-    /// Gets the relevant account aggregate key.
+    /// Gets the relevant account's aggregate key.
     /// </summary>
     public AccountKey AccountKey { get; }
 
     /// <summary>
-    /// Gets the account display name.
+    /// Gets the relevant account's display name.
     /// </summary>
     public string DisplayName { get; }
 
     /// <summary>
-    /// Gets the type of the account.
+    /// Gets the relevant account's type.
     /// </summary>
     public AccountTypes Type { get; }
 
     /// <summary>
-    /// Gets the state of the account.
+    /// Gets the relevant account's state.
     /// </summary>
     public AccountStates State { get; }
 }

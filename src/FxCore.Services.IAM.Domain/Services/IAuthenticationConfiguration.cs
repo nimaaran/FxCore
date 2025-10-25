@@ -4,14 +4,12 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Abstraction.Services;
-
 namespace FxCore.Services.IAM.Domain.Services;
 
 /// <summary>
-/// Defines a contract for passports' config provider.
+/// Defines a contract for authentication configuration model.
 /// </summary>
-public interface IAuthenticationConfigProvider : IDomainService
+public interface IAuthenticationConfiguration
 {
     /// <summary>
     /// Gets a value indicating after how many failed login attempts the account gets protected.

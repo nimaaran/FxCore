@@ -12,30 +12,30 @@ using FxCore.Services.IAM.Shared.Passports;
 namespace FxCore.Services.IAM.Domain.Events.Passports;
 
 /// <summary>
-/// Defines a domain event for when a passport secret is changed.
+/// Defines a domain event for when a passport secret is generated.
 /// </summary>
-public sealed record class PassportSecretSet : DomainEventBase
+public sealed record class PassportSecretGenerated : DomainEventBase
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="PassportSecretSet"/> class.
+    /// Initializes a new instance of the <see cref="PassportSecretGenerated"/> class.
     /// </summary>
     /// <param name="dependencies">See <see cref="IEventDependenciesProvider"/>.</param>
     /// <param name="passportKey">See <see cref="PassportKey"/>.</param>
     /// <param name="secretType">See <see cref="SecretType"/>.</param>
-    /// <param name="secret">See <see cref="Secret"/>.</param>
     /// <param name="expireDate">See <see cref="ExpireDate"/>.</param>
-    public PassportSecretSet(
+    /// <param name="generatedSecret">See <see cref="GeneratedSecret"/>.</param>
+    public PassportSecretGenerated(
         IEventDependenciesProvider dependencies,
         PassportKey passportKey,
         SecretTypes secretType,
-        ISecret secret,
-        DateTimeOffset expireDate)
+        DateTimeOffset expireDate,
+        ISecret generatedSecret)
         : base(dependencies)
     {
         this.PassportKey = passportKey;
         this.SecretType = secretType;
-        this.Secret = secret;
         this.ExpireDate = expireDate;
+        this.GeneratedSecret = generatedSecret;
     }
 
     /// <summary>
@@ -54,7 +54,7 @@ public sealed record class PassportSecretSet : DomainEventBase
     public DateTimeOffset ExpireDate { get; }
 
     /// <summary>
-    /// Gets the encoded secret data.
+    /// Gets the passport secret data.
     /// </summary>
-    internal ISecret Secret { get; }
+    internal ISecret GeneratedSecret { get; }
 }

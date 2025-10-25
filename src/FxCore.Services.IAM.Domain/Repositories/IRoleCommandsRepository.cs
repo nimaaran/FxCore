@@ -4,11 +4,15 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Services.IAM.Domain.Aggregates.Accounts;
+using FxCore.Abstraction.Persistence.Repositories.Contracts;
+using FxCore.Services.IAM.Domain.Aggregates.Roles;
 
-namespace FxCore.Services.IAM.Domain.Services;
+namespace FxCore.Services.IAM.Domain.Repositories;
 
 /// <summary>
-/// Defines a contract for machine account key generators.
+/// Defines a contract to define command methods of role aggregate repositories.
 /// </summary>
-public interface IMachineAccountKeyGenerator : IAccountKeyGenerator<MachineAccount>;
+/// <typeparam name="TRole">Type of the role.</typeparam>
+public interface IRoleCommandsRepository<TRole> :
+    IAggregateCommandsRepository<TRole>
+    where TRole : Role<TRole>;

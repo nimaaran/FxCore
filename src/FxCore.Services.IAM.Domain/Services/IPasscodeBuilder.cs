@@ -9,6 +9,6 @@ using FxCore.Services.IAM.Domain.Aggregates.Passports;
 namespace FxCore.Services.IAM.Domain.Services;
 
 /// <summary>
-/// Defines a contract for email passport key generators.
+/// Defines a contract for password builders.
 /// </summary>
-public interface IEmailPassportKeyGenerator : IPassportKeyGenerator<EmailPassport>;
+public interface IPasscodeBuilder : ISecretBuilder<Passcode>;

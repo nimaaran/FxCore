@@ -4,8 +4,8 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Abstraction.Models;
-using FxCore.Abstraction.Services;
+using FxCore.Abstraction.Events;
+using FxCore.Abstraction.Events.Contracts;
 using FxCore.Services.IAM.Shared.Accounts;
 
 namespace FxCore.Services.IAM.Domain.Events.Accounts;
@@ -18,8 +18,8 @@ public sealed record AccountBanned : DomainEventBase
     /// <summary>
     /// Initializes a new instance of the <see cref="AccountBanned"/> class.
     /// </summary>
-    /// <param name="dependencies">Domain event dependencies provider.</param>
-    /// <param name="accountKey">The relevant account aggregate key.</param>
+    /// <param name="dependencies">See <see cref="IEventDependenciesProvider"/>.</param>
+    /// <param name="accountKey">See <see cref="AccountKey"/>.</param>
     public AccountBanned(IEventDependenciesProvider dependencies, AccountKey accountKey)
         : base(dependencies)
     {
@@ -27,7 +27,7 @@ public sealed record AccountBanned : DomainEventBase
     }
 
     /// <summary>
-    /// Gets the relevant account aggregate key.
+    /// Gets the relevant account's aggregate key.
     /// </summary>
     public AccountKey AccountKey { get; }
 }

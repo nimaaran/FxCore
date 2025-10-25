@@ -4,11 +4,11 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Services.IAM.Domain.Aggregates.Accounts;
+using FxCore.Services.IAM.Domain.Aggregates.Passports;
 
 namespace FxCore.Services.IAM.Domain.Services;
 
 /// <summary>
-/// Defines a contract for guest account key generators.
+/// Defines a contract for password builders.
 /// </summary>
-public interface IGuestAccountKeyGenerator : IAccountKeyGenerator<GuestAccount>;
+public interface IPasswordBuilder : ISecretBuilder<Password>;

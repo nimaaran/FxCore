@@ -4,8 +4,8 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Abstraction.Models;
-using FxCore.Abstraction.Services;
+using FxCore.Abstraction.Aggregates.Contracts;
+using FxCore.Services.IAM.Domain.Aggregates.Accounts;
 using FxCore.Services.IAM.Shared.Accounts;
 
 namespace FxCore.Services.IAM.Domain.Services;
@@ -13,7 +13,6 @@ namespace FxCore.Services.IAM.Domain.Services;
 /// <summary>
 /// Defines a generic contract for accout key generators.
 /// </summary>
-/// <typeparam name="TAggregateRootModel">Type of the aggregate root model.</typeparam>
-public interface IAccountKeyGenerator<TAggregateRootModel>
-    : IAggregateKeyGenerator<TAggregateRootModel, AccountKey>
-    where TAggregateRootModel : IAggregateRootModel;
+/// <typeparam name="TAccount">Type of the account.</typeparam>
+public interface IAccountKeyGenerator<TAccount> : IAggregateKeyGenerator<TAccount, AccountKey>
+    where TAccount : Account<TAccount>;

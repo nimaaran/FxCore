@@ -4,11 +4,21 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Services.IAM.Domain.Aggregates.Accounts;
+using FxCore.Services.IAM.Shared.Passports;
 
-namespace FxCore.Services.IAM.Domain.Services;
+namespace FxCore.Services.IAM.Domain.Aggregates.Passports;
 
 /// <summary>
-/// Defines a contract for user account key generators.
+/// Implements a secret type for managing passcodes and OTPs.
 /// </summary>
-public interface IUserAccountKeyGenerator : IAccountKeyGenerator<UserAccount>;
+public sealed class Passcode : Secret<Passcode>
+{
+    private Passcode()
+    {
+    }
+
+    private Passcode(string encodedValue, DateTimeOffset expireDate, SecretTypes type)
+        : base(encodedValue, expireDate, type)
+    {
+    }
+}

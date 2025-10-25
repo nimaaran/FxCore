@@ -4,8 +4,8 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Abstraction.Services;
-using FxCore.Abstraction.Types;
+using FxCore.Abstraction.Common.Models;
+using FxCore.Abstraction.Events.Contracts;
 using FxCore.Services.IAM.Domain.Services;
 using FxCore.Services.IAM.Shared.Accounts;
 using FxCore.Services.IAM.Shared.Passports;

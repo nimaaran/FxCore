@@ -4,9 +4,9 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Abstraction.Models;
-using FxCore.Abstraction.Services;
-using FxCore.Abstraction.Types;
+using FxCore.Abstraction.Aggregates;
+using FxCore.Abstraction.Common.Models;
+using FxCore.Abstraction.Events.Contracts;
 using FxCore.Services.IAM.Domain.Events.Roles;
 using FxCore.Services.IAM.Domain.Services;
 using FxCore.Services.IAM.Shared.Roles;
@@ -16,9 +16,14 @@ namespace FxCore.Services.IAM.Domain.Aggregates.Roles;
 /// <summary>
 /// Defines an aggregate root for the roles aggregate.
 /// </summary>
-public sealed class Role : EventDrivenRootBase<long, RoleKey>
+/// <typeparam name="TRole">Type of the role.</typeparam>
+public abstract class Role<TRole> : EventDrivenRootBase<long, RoleKey>
+    where TRole : Role<TRole>
 {
-    private Role()
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Role{TRole}"/> class.
+    /// </summary>
+    protected Role()
         : base(
             id: default,
             key: new RoleKey(string.Empty),
@@ -27,47 +32,49 @@ public sealed class Role : EventDrivenRootBase<long, RoleKey>
     {
     }
 
-    private Role(RoleKey roleKey, AggregateLock @lock)
-        : base(
-            id: default,
-            key: roleKey,
-            removed: false,
-            @lock: @lock)
-    {
-    }
-
-    private Role(
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Role{TRole}"/> class.
+    /// </summary>
+    /// <param name="dependencies">See <see cref="IEventDependenciesProvider"/>.</param>
+    /// <param name="roleKeyGenerator">A role key generator.</param>
+    /// <param name="title">See <see cref="Title"/>.</param>
+    /// <param name="type">See <see cref="Type"/>.</param>
+    /// <param name="state">See <see cref="State"/>.</param>
+    /// <param name="result">See <see cref="Result"/>.</param>
+    protected Role(
         IEventDependenciesProvider dependencies,
-        IRoleKeyGenerator roleKeyGenerator,
+        IRoleKeyGenerator<TRole> roleKeyGenerator,
         string title,
-        bool isSensitive,
         RoleTypes type,
+        RoleStates state,
         out Result result)
         : this(
             roleKey: roleKeyGenerator.Generate(),
-            @lock: AggregateLock.Create(dependencies.DateTimeService.Now()))
+            @lock: AggregateLock.Create(dependencies.DateTimeService.UtcNow()))
     {
         var @event = new RoleDefined(
             dependencies: dependencies,
             roleKey: this.Key,
             title: title,
-            isSensitive: isSensitive,
             type: type,
-            state: RoleStates.ENABLED);
+            state: state);
 
         result = this.ApplyEvent(@event: @event, isNew: true);
+    }
+
+    private Role(RoleKey roleKey, AggregateLock @lock)
+    : base(
+        id: default,
+        key: roleKey,
+        removed: false,
+        @lock: @lock)
+    {
     }
 
     /// <summary>
     /// Gets the role title.
     /// </summary>
     public string Title { get; private set; } = string.Empty;
-
-    /// <summary>
-    /// Gets a value indicating whether the role is sensitive or not. For example we can enforce
-    /// two-factor authentication for using sensitive roles.
-    /// </summary>
-    public bool IsSensitive { get; private set; } = false;
 
     /// <summary>
     /// Gets the role type.
@@ -80,51 +87,11 @@ public sealed class Role : EventDrivenRootBase<long, RoleKey>
     public RoleStates State { get; private set; } = RoleStates.DISABLED;
 
     /// <summary>
-    /// Defines a new role.
-    /// </summary>
-    /// <param name="dependencies">
-    /// An object that provides required dependencies for creating domain events.
-    /// </param>
-    /// <param name="roleKeyGenerator">A role key generator service.</param>
-    /// <param name="roleTitle">The role title.</param>
-    /// <param name="isSensitive">
-    ///     A value indicating whether the role is sensitive or not.
-    /// </param>
-    /// <param name="roleType">The role type.</param>
-    /// <returns>An object as type of the <see cref="Result"/>.</returns>
-    public static Result Define(
-        IEventDependenciesProvider dependencies,
-        IRoleKeyGenerator roleKeyGenerator,
-        string roleTitle,
-        bool isSensitive,
-        RoleTypes roleType)
-    {
-        if (dependencies is null ||
-            roleKeyGenerator is null ||
-            string.IsNullOrWhiteSpace(roleTitle))
-        {
-            return Result.Terminated(ResultCodes.BAD_REQUEST);
-        }
-
-        _ = new Role(
-                dependencies,
-                roleKeyGenerator,
-                roleTitle,
-                isSensitive,
-                roleType,
-                out Result result);
-
-        return result;
-    }
-
-    /// <summary>
     /// Enables the role.
     /// </summary>
-    /// <param name="dependencies">
-    /// An object that provides required dependencies for creating domain events.
-    /// </param>
+    /// <param name="dependencies">See <see cref="IEventDependenciesProvider"/>.</param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
-    public Result Enable(IEventDependenciesProvider dependencies)
+    protected Result Enable(IEventDependenciesProvider dependencies)
     {
         if (dependencies is null)
         {
@@ -141,11 +108,9 @@ public sealed class Role : EventDrivenRootBase<long, RoleKey>
     /// <summary>
     /// Disables the role.
     /// </summary>
-    /// <param name="dependencies">
-    /// An object that provides required dependencies for creating domain events.
-    /// </param>
+    /// <param name="dependencies">See <see cref="IEventDependenciesProvider"/>.</param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
-    public Result Disable(IEventDependenciesProvider dependencies)
+    protected Result Disable(IEventDependenciesProvider dependencies)
     {
         if (dependencies is null)
         {
@@ -162,11 +127,9 @@ public sealed class Role : EventDrivenRootBase<long, RoleKey>
     /// <summary>
     /// Removes the role.
     /// </summary>
-    /// <param name="dependencies">
-    /// An object that provides required dependencies for creating domain events.
-    /// </param>
+    /// <param name="dependencies">See <see cref="IEventDependenciesProvider"/>.</param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
-    public Result Remove(IEventDependenciesProvider dependencies)
+    protected Result Remove(IEventDependenciesProvider dependencies)
     {
         if (dependencies is null)
         {
@@ -180,50 +143,8 @@ public sealed class Role : EventDrivenRootBase<long, RoleKey>
         return this.ApplyEvent(@event: @event, isNew: true);
     }
 
-    /// <summary>
-    /// Sets the <see cref="IsSensitive"/> flag.
-    /// </summary>
-    /// <param name="dependencies">
-    /// An object that provides required dependencies for creating domain events.
-    /// </param>
-    /// <returns>An object as type of the <see cref="Result"/>.</returns>
-    public Result SetSensitivity(IEventDependenciesProvider dependencies)
-    {
-        if (dependencies is null)
-        {
-            return Result.Terminated(ResultCodes.BAD_REQUEST);
-        }
-
-        var @event = new SensitivityFlagSet(
-            dependencies: dependencies,
-            roleKey: this.Key);
-
-        return this.ApplyEvent(@event: @event, isNew: true);
-    }
-
-    /// <summary>
-    /// unsets the <see cref="IsSensitive"/> flag.
-    /// </summary>
-    /// <param name="dependencies">
-    /// An object that provides required dependencies for creating domain events.
-    /// </param>
-    /// <returns>An object as type of the <see cref="Result"/>.</returns>
-    public Result UnsetSensitivity(IEventDependenciesProvider dependencies)
-    {
-        if (dependencies is null)
-        {
-            return Result.Terminated(ResultCodes.BAD_REQUEST);
-        }
-
-        var @event = new SensitivityFlagUnset(
-            dependencies: dependencies,
-            roleKey: this.Key);
-
-        return this.ApplyEvent(@event: @event, isNew: true);
-    }
-
     /// <inheritdoc/>
-    protected override Result DispatchEvent(IDomainEventModel @event)
+    protected override Result DispatchEvent(IDomainEvent @event)
     {
         var result = @event switch
         {
@@ -231,8 +152,6 @@ public sealed class Role : EventDrivenRootBase<long, RoleKey>
             RoleEnabled _ => this.OnRoleEnabled(),
             RoleRemoved _ => this.OnRoleRemoved(),
             RoleDisabled _ => this.OnRoleDisabled(),
-            SensitivityFlagSet _ => this.OnSensitivityFlagSet(),
-            SensitivityFlagUnset _ => this.OnSensitivityFlagUnset(),
 
             _ => base.DispatchEvent(@event),
         };
@@ -243,7 +162,6 @@ public sealed class Role : EventDrivenRootBase<long, RoleKey>
     private Result OnRoleDefined(RoleDefined @event)
     {
         this.Title = @event.Title;
-        this.IsSensitive = @event.IsSensitive;
         this.Type = @event.Type;
         this.State = @event.State;
 
@@ -276,10 +194,6 @@ public sealed class Role : EventDrivenRootBase<long, RoleKey>
         {
             return Result.Terminated(ResultCodes.NOT_MODIFIED);
         }
-        else if (this.Type == RoleTypes.SYSTEM_DEFINED)
-        {
-            return Result.Terminated(ResultCodes.INCONSISTENCY, "System Roles should not be disabled.");
-        }
 
         this.State = RoleStates.DISABLED;
 
@@ -292,43 +206,7 @@ public sealed class Role : EventDrivenRootBase<long, RoleKey>
         {
             return Result.Terminated(ResultCodes.NOT_MODIFIED);
         }
-        else if (this.Type == RoleTypes.SYSTEM_DEFINED)
-        {
-            return Result.Terminated(ResultCodes.INCONSISTENCY, "System Roles should not be removed.");
-        }
 
         return this.Remove();
-    }
-
-    private Result OnSensitivityFlagSet()
-    {
-        if (this.Removed)
-        {
-            return Result.Terminated(ResultCodes.ARCHIVED);
-        }
-        else if (this.IsSensitive)
-        {
-            return Result.Terminated(ResultCodes.NOT_MODIFIED);
-        }
-
-        this.IsSensitive = true;
-
-        return Result.Completed();
-    }
-
-    private Result OnSensitivityFlagUnset()
-    {
-        if (this.Removed)
-        {
-            return Result.Terminated(ResultCodes.ARCHIVED);
-        }
-        else if (!this.IsSensitive)
-        {
-            return Result.Terminated(ResultCodes.NOT_MODIFIED);
-        }
-
-        this.IsSensitive = false;
-
-        return Result.Completed();
     }
 }

@@ -4,8 +4,8 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Abstraction.Models;
-using FxCore.Abstraction.Services;
+using FxCore.Abstraction.Aggregates.Contracts;
+using FxCore.Services.IAM.Domain.Aggregates.Passports;
 using FxCore.Services.IAM.Shared.Passports;
 
 namespace FxCore.Services.IAM.Domain.Services;
@@ -13,7 +13,6 @@ namespace FxCore.Services.IAM.Domain.Services;
 /// <summary>
 /// Defines a generic contract for passport key generators.
 /// </summary>
-/// <typeparam name="TAggregateRootModel">Type of the aggregate root model.</typeparam>
-public interface IPassportKeyGenerator<TAggregateRootModel>
-    : IAggregateKeyGenerator<TAggregateRootModel, PassportKey>
-    where TAggregateRootModel : IAggregateRootModel;
+/// <typeparam name="TPassport">Type of the passport.</typeparam>
+public interface IPassportKeyGenerator<TPassport> : IAggregateKeyGenerator<TPassport, PassportKey>
+    where TPassport : Passport<TPassport>;

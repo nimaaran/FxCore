@@ -7,83 +7,90 @@
 using FxCore.Abstraction.Common.Models;
 using FxCore.Abstraction.Events.Contracts;
 using FxCore.Services.IAM.Domain.Services;
-using FxCore.Services.IAM.Shared.Accounts;
 using FxCore.Services.IAM.Shared.Roles;
 
-namespace FxCore.Services.IAM.Domain.Aggregates.Accounts;
+namespace FxCore.Services.IAM.Domain.Aggregates.Roles;
 
 /// <summary>
-/// Defines the guest account concrete aggregate root.
+/// Implements a concrete aggregate root class for user roles.
 /// </summary>
-public sealed class GuestAccount : Account<GuestAccount>
+public class UserRole : Role<UserRole>
 {
-    private GuestAccount()
+    private UserRole()
         : base()
     {
     }
 
-    private GuestAccount(
+    private UserRole(
         IEventDependenciesProvider dependencies,
-        IAccountKeyGenerator<GuestAccount> guestAccountKeyGenerator,
-        string displayName,
+        IRoleKeyGenerator<UserRole> roleKeyGenerator,
+        string title,
         out Result result)
         : base(
             dependencies,
-            guestAccountKeyGenerator,
-            displayName,
-            AccountTypes.GUEST,
-            AccountStates.ACTIVATED,
+            roleKeyGenerator,
+            title,
+            RoleTypes.USER_DEFINED,
+            RoleStates.DISABLED,
             out result)
     {
     }
 
     /// <summary>
-    /// Registers a new guest account.
+    /// Defines a new system role.
     /// </summary>
     /// <param name="dependencies">See <see cref="IEventDependenciesProvider"/>.</param>
-    /// <param name="guestAccountKeyGenerator">A guest account key generator.</param>
-    /// <param name="displayName">The guest account display name.</param>
+    /// <param name="roleKeyGenerator">A role key generator service.</param>
+    /// <param name="title">See <see cref="Role{TRole}.Title"/>.</param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
-    public static Result Register(
+    public static Result Define(
         IEventDependenciesProvider dependencies,
-        IAccountKeyGenerator<GuestAccount> guestAccountKeyGenerator,
-        string displayName)
+        IRoleKeyGenerator<UserRole> roleKeyGenerator,
+        string title)
     {
         if (dependencies is null ||
-            guestAccountKeyGenerator is null ||
-            string.IsNullOrWhiteSpace(displayName))
+            roleKeyGenerator is null ||
+            string.IsNullOrWhiteSpace(title))
         {
             return Result.Terminated(ResultCodes.BAD_REQUEST);
         }
 
-        _ = new GuestAccount(
+        _ = new UserRole(
             dependencies,
-            guestAccountKeyGenerator,
-            displayName,
+            roleKeyGenerator,
+            title,
             out Result result);
 
         return result;
     }
 
     /// <summary>
-    /// Assigns a role to the guest account.
+    /// Enables the role.
     /// </summary>
     /// <param name="dependencies">See <see cref="IEventDependenciesProvider"/>.</param>
-    /// <param name="roleKey">See <see cref="AccountRole.RoleKey"/>.</param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
-    public new Result AssignRole(IEventDependenciesProvider dependencies, RoleKey roleKey)
+    public new Result Enable(IEventDependenciesProvider dependencies)
     {
-        return base.AssignRole(dependencies, roleKey);
+        return base.Enable(dependencies);
     }
 
     /// <summary>
-    /// Revokes a role from the guest account.
+    /// Disables the role.
     /// </summary>
     /// <param name="dependencies">See <see cref="IEventDependenciesProvider"/>.</param>
-    /// <param name="roleKey">See <see cref="AccountRole.RoleKey"/>.</param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
-    public new Result RevokeRole(IEventDependenciesProvider dependencies, RoleKey roleKey)
+    public new Result Disable(IEventDependenciesProvider dependencies)
     {
-        return base.RevokeRole(dependencies, roleKey);
+        return base.Disable(dependencies);
+    }
+
+    /// <summary>
+    /// Removes the role.
+    /// </summary>
+    /// <param name="dependencies">See <see cref="IEventDependenciesProvider"/>.</param>
+    /// <returns>An object as type of the <see cref="Result"/>.</returns>
+    public new Result Remove(IEventDependenciesProvider dependencies)
+    {
+        return base.Remove(dependencies);
     }
 }

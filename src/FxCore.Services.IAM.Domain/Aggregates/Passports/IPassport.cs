@@ -4,11 +4,11 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Abstraction.Models;
+using FxCore.Abstraction.Aggregates.Contracts;
 
 namespace FxCore.Services.IAM.Domain.Aggregates.Passports;
 
 /// <summary>
 /// Defines a marker interface to identify all kinds of passports.
 /// </summary>
-public interface IPassport : IEntityModel;
+public interface IPassport : IEventDrivenRoot;

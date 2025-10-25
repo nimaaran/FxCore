@@ -4,8 +4,8 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Abstraction.Models;
-using FxCore.Abstraction.Services;
+using FxCore.Abstraction.Events;
+using FxCore.Abstraction.Events.Contracts;
 using FxCore.Services.IAM.Shared.Passports;
 
 namespace FxCore.Services.IAM.Domain.Events.Passports;
@@ -18,10 +18,10 @@ public sealed record class PassportVerified : DomainEventBase
     /// <summary>
     /// Initializes a new instance of the <see cref="PassportVerified"/> class.
     /// </summary>
-    /// <param name="dependencies">Domain event dependencies provider.</param>
-    /// <param name="passportKey">The relevant passport key.</param>
-    /// <param name="passportType">The relevant passport type.</param>
-    /// <param name="secretType">The relevant passport secret type.</param>
+    /// <param name="dependencies">See <see cref="IEventDependenciesProvider"/>.</param>
+    /// <param name="passportKey">See <see cref="PassportKey"/>.</param>
+    /// <param name="passportType">See <see cref="PassportType"/>.</param>
+    /// <param name="secretType">See <see cref="SecretType"/>.</param>
     public PassportVerified(
         IEventDependenciesProvider dependencies,
         PassportKey passportKey,

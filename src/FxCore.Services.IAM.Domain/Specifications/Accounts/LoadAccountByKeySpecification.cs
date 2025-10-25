@@ -4,30 +4,29 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Abstraction.Models;
-using FxCore.Abstraction.Services;
+using FxCore.Abstraction.Aggregates.Contracts;
+using FxCore.Abstraction.Persistence.Specifications;
 using FxCore.Services.IAM.Shared.Accounts;
 
-namespace FxCore.Services.IAM.Domain.Events.Accounts;
+namespace FxCore.Services.IAM.Domain.Specifications.Accounts;
 
 /// <summary>
-/// Defines an event model for when an account is restricted.
+/// Defines a specification for loading account aggregate roots by their keys.
 /// </summary>
-public sealed record AccountRestricted : DomainEventBase
+/// <typeparam name="TAccount">Type of the account.</typeparam>
+/// <typeparam name="TKey">Type of the aggregate key.</typeparam>
+public class LoadAccountByKeySpecification<TAccount, TKey> : SpecificationBase<TAccount>
+    where TAccount : class, IAggregateRoot<TAccount, TKey>
+    where TKey : IAggregateKey
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="AccountRestricted"/> class.
+    /// Initializes a new instance of the
+    /// <see cref="LoadAccountByKeySpecification{TAccount,TKey}"/> class.
     /// </summary>
-    /// <param name="dependencies">Domain event dependencies provider.</param>
-    /// <param name="accountKey">The relevant account aggregate key.</param>
-    public AccountRestricted(IEventDependenciesProvider dependencies, AccountKey accountKey)
-        : base(dependencies)
+    /// <param name="accountKey">The aggregate key of the desired account.</param>
+    public LoadAccountByKeySpecification(AccountKey accountKey)
     {
-        this.AccountKey = accountKey;
+        this.Criterion = new Criterion<TAccount>().Set(r => r.Key.Equals(accountKey))
+                                                  .And(new OnlyActiveRecords<TAccount>());
     }
-
-    /// <summary>
-    /// Gets the relevant account aggregate key.
-    /// </summary>
-    public AccountKey AccountKey { get; }
 }

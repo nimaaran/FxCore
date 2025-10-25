@@ -4,8 +4,8 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Abstraction.Models;
-using FxCore.Abstraction.Services;
+using FxCore.Abstraction.Events;
+using FxCore.Abstraction.Events.Contracts;
 using FxCore.Services.IAM.Shared.Roles;
 
 namespace FxCore.Services.IAM.Domain.Events.Roles;
@@ -18,8 +18,8 @@ public sealed record RoleDisabled : DomainEventBase
     /// <summary>
     /// Initializes a new instance of the <see cref="RoleDisabled"/> class.
     /// </summary>
-    /// <param name="dependencies">Domain event dependencies provider.</param>
-    /// <param name="roleKey">The relevant role aggregate key.</param>
+    /// <param name="dependencies">See <see cref="IEventDependenciesProvider"/>.</param>
+    /// <param name="roleKey">See <see cref="RoleKey"/>.</param>
     public RoleDisabled(IEventDependenciesProvider dependencies, RoleKey roleKey)
         : base(dependencies)
     {
@@ -27,7 +27,7 @@ public sealed record RoleDisabled : DomainEventBase
     }
 
     /// <summary>
-    /// Gets the relevant role aggregate key.
+    /// Gets the relevant role's aggregate key.
     /// </summary>
     public RoleKey RoleKey { get; }
 }

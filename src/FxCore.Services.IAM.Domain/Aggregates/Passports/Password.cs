@@ -4,17 +4,21 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Abstraction.Persistence;
-using FxCore.Services.IAM.Domain.Aggregates.Roles;
+using FxCore.Services.IAM.Shared.Passports;
 
-namespace FxCore.Services.IAM.Domain.Repositories;
+namespace FxCore.Services.IAM.Domain.Aggregates.Passports;
 
 /// <summary>
-/// Defines a contract for role aggregate repository.
+/// Implements a secret type for managing passwords.
 /// </summary>
-public interface IRoleRepository :
-    IRecordCreatorRepository<Role>,
-    IRecordUpdaterRepository<Role>,
-    IRecordRemoverRepository<Role>,
-    IRecordReaderRepository<Role>,
-    IRecordsReaderRepository<Role>;
+public sealed class Password : Secret<Password>
+{
+    private Password()
+    {
+    }
+
+    private Password(string encodedValue, DateTimeOffset expireDate, SecretTypes type)
+        : base(encodedValue, expireDate, type)
+    {
+    }
+}

@@ -4,30 +4,15 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Abstraction.Models;
-using FxCore.Abstraction.Services;
-using FxCore.Services.IAM.Shared.Roles;
+using FxCore.Abstraction.Persistence.Repositories.Contracts;
+using FxCore.Services.IAM.Domain.Aggregates.Accounts;
 
-namespace FxCore.Services.IAM.Domain.Events.Roles;
+namespace FxCore.Services.IAM.Domain.Repositories;
 
 /// <summary>
-/// Defines a domain event model for when a sensitivity flag is set on a role.
+/// Defines a contract to define query methods of account aggregate repositories.
 /// </summary>
-public sealed record SensitivityFlagSet : DomainEventBase
-{
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SensitivityFlagSet"/> class.
-    /// </summary>
-    /// <param name="dependencies">Domain event dependencies provider.</param>
-    /// <param name="roleKey">The relevant role aggregate key.</param>
-    public SensitivityFlagSet(IEventDependenciesProvider dependencies, RoleKey roleKey)
-        : base(dependencies)
-    {
-        this.RoleKey = roleKey;
-    }
-
-    /// <summary>
-    /// Gets the relevant role aggregate key.
-    /// </summary>
-    public RoleKey RoleKey { get; }
-}
+/// <typeparam name="TAccount">the account aggregate root type.</typeparam>
+public interface IAccountQueriesRepository<TAccount> :
+    IAggregateQueriesRepository<TAccount>
+    where TAccount : Account<TAccount>;

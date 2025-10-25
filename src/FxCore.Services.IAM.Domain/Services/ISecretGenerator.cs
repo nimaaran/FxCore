@@ -4,30 +4,21 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Abstraction.Models;
-using FxCore.Abstraction.Services;
-using FxCore.Services.IAM.Shared.Roles;
+using FxCore.Abstraction.Common.Services.Contracts;
+using FxCore.Services.IAM.Domain.Aggregates.Passports;
 
-namespace FxCore.Services.IAM.Domain.Events.Roles;
+namespace FxCore.Services.IAM.Domain.Services;
 
 /// <summary>
-/// Defines a domain event model for when a sensitivity flag is unset on a role.
+/// Defines a contract for secret generators.
 /// </summary>
-public sealed record SensitivityFlagUnset : DomainEventBase
+/// <typeparam name="TSecret">Type of the passport secret.</typeparam>
+public interface ISecretGenerator<TSecret> : IDomainService
+    where TSecret : Secret<TSecret>
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="SensitivityFlagUnset"/> class.
+    /// Generates a new raw secret data.
     /// </summary>
-    /// <param name="dependencies">Domain event dependencies provider.</param>
-    /// <param name="roleKey">The relevant role aggregate key.</param>
-    public SensitivityFlagUnset(IEventDependenciesProvider dependencies, RoleKey roleKey)
-        : base(dependencies)
-    {
-        this.RoleKey = roleKey;
-    }
-
-    /// <summary>
-    /// Gets the relevant role aggregate key.
-    /// </summary>
-    public RoleKey RoleKey { get; }
+    /// <returns>The raw secret data.</returns>
+    string Generate();
 }

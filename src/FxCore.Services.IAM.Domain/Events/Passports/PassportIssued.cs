@@ -4,8 +4,8 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Abstraction.Models;
-using FxCore.Abstraction.Services;
+using FxCore.Abstraction.Events;
+using FxCore.Abstraction.Events.Contracts;
 using FxCore.Services.IAM.Shared.Accounts;
 using FxCore.Services.IAM.Shared.Passports;
 
@@ -19,12 +19,12 @@ public sealed record class PassportIssued : DomainEventBase
     /// <summary>
     /// Initializes a new instance of the <see cref="PassportIssued"/> class.
     /// </summary>
-    /// <param name="dependencies">Domain event dependencies provider.</param>
-    /// <param name="passportKey">The aggregate key of the relevant passport.</param>
-    /// <param name="accountKey">The account key of the passport owner.</param>
-    /// <param name="identity">The relevant passport identity.</param>
-    /// <param name="type">The relevant passport type.</param>
-    /// <param name="state">The relevant passport state.</param>
+    /// <param name="dependencies">See <see cref="IEventDependenciesProvider"/>.</param>
+    /// <param name="passportKey">See <see cref="PassportKey"/>.</param>
+    /// <param name="accountKey">See <see cref="AccountKey"/>.</param>
+    /// <param name="identity">See <see cref="Identity"/>.</param>
+    /// <param name="type">See <see cref="Type"/>.</param>
+    /// <param name="state">See <see cref="State"/>.</param>
     public PassportIssued(
         IEventDependenciesProvider dependencies,
         PassportKey passportKey,

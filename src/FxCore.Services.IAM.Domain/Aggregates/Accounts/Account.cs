@@ -4,9 +4,9 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Abstraction.Models;
-using FxCore.Abstraction.Services;
-using FxCore.Abstraction.Types;
+using FxCore.Abstraction.Aggregates;
+using FxCore.Abstraction.Common.Models;
+using FxCore.Abstraction.Events.Contracts;
 using FxCore.Services.IAM.Domain.Events.Accounts;
 using FxCore.Services.IAM.Domain.Services;
 using FxCore.Services.IAM.Shared.Accounts;
@@ -16,16 +16,16 @@ using FxCore.Services.IAM.Shared.Roles;
 namespace FxCore.Services.IAM.Domain.Aggregates.Accounts;
 
 /// <summary>
-/// Defines the base class for different types of accounts.
+/// Defines the base class for concrete account types.
 /// </summary>
-/// <typeparam name="TAggregateRootModel">Type of the concrete aggregate root model.</typeparam>
-public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, AccountKey>
-    where TAggregateRootModel : IAggregateRootModel
+/// <typeparam name="TAccount">the account type.</typeparam>
+public abstract class Account<TAccount> : EventDrivenRootBase<long, AccountKey>
+    where TAccount : Account<TAccount>
 {
     private readonly List<AccountRole> assignedRoles = [];
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="Account{TAggregateRootModel}"/> class.
+    /// Initializes a new instance of the <see cref="Account{TAccount}"/> class.
     /// </summary>
     protected Account()
         : base(
@@ -37,11 +37,9 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="Account{TAggregateRootModel}"/> class.
+    /// Initializes a new instance of the <see cref="Account{TAccount}"/> class.
     /// </summary>
-    /// <param name="dependencies">
-    /// An object that provides required dependencies for creating domain events.
-    /// </param>
+    /// <param name="dependencies">See <see cref="IEventDependenciesProvider"/>.</param>
     /// <param name="accountKeyGenerator">An account key generator.</param>
     /// <param name="displayName">The account display name.</param>
     /// <param name="accountType">The account type.</param>
@@ -49,14 +47,14 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
     /// <param name="result">An object as type of <see cref="Result"/>.</param>
     protected Account(
         IEventDependenciesProvider dependencies,
-        IAccountKeyGenerator<TAggregateRootModel> accountKeyGenerator,
+        IAccountKeyGenerator<TAccount> accountKeyGenerator,
         string displayName,
         AccountTypes accountType,
         AccountStates accountState,
         out Result result)
         : this(
             accountKey: accountKeyGenerator.Generate(),
-            @lock: AggregateLock.Create(dependencies.DateTimeService.Now()))
+            @lock: AggregateLock.Create(dependencies.DateTimeService.UtcNow()))
     {
         var @event = new AccountRegistered(
             dependencies,
@@ -115,9 +113,7 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
     /// <summary>
     /// Activates the account.
     /// </summary>
-    /// <param name="dependencies">
-    /// An object that provides required dependencies for creating domain events.
-    /// </param>
+    /// <param name="dependencies">See <see cref="IEventDependenciesProvider"/>.</param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
     protected Result Activate(IEventDependenciesProvider dependencies)
     {
@@ -136,9 +132,7 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
     /// <summary>
     /// Deactivates the account.
     /// </summary>
-    /// <param name="dependencies">
-    /// An object that provides required dependencies for creating domain events.
-    /// </param>
+    /// <param name="dependencies">See <see cref="IEventDependenciesProvider"/>.</param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
     protected Result Deactivate(IEventDependenciesProvider dependencies)
     {
@@ -157,9 +151,7 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
     /// <summary>
     /// Closes the account.
     /// </summary>
-    /// <param name="dependencies">
-    /// An object that provides required dependencies for creating domain events.
-    /// </param>
+    /// <param name="dependencies">See <see cref="IEventDependenciesProvider"/>.</param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
     protected Result Close(IEventDependenciesProvider dependencies)
     {
@@ -178,9 +170,7 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
     /// <summary>
     /// Bans the account.
     /// </summary>
-    /// <param name="dependencies">
-    /// An object that provides required dependencies for creating domain events.
-    /// </param>
+    /// <param name="dependencies">See <see cref="IEventDependenciesProvider"/>.</param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
     protected Result Ban(IEventDependenciesProvider dependencies)
     {
@@ -199,19 +189,14 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
     /// <summary>
     /// Assigns a role to the account.
     /// </summary>
-    /// <param name="dependencies">
-    /// An object that provides required dependencies for creating domain events.
-    /// </param>
+    /// <param name="dependencies">See <see cref="IEventDependenciesProvider"/>.</param>
     /// <param name="roleKey">Desired role key.</param>
-    /// <param name="isSensitiveRole">A flag indicating whether the role is sensitive.</param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
     protected Result AssignRole(
         IEventDependenciesProvider dependencies,
-        RoleKey roleKey,
-        bool isSensitiveRole)
+        RoleKey roleKey)
     {
-        if (dependencies is null ||
-            roleKey == new RoleKey(string.Empty))
+        if (dependencies is null || roleKey == new RoleKey(string.Empty))
         {
             return Result.Terminated(ResultCodes.BAD_REQUEST);
         }
@@ -220,13 +205,6 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
             dependencies: dependencies,
             accountKey: this.Key,
             roleKey: roleKey);
-
-        if (isSensitiveRole && !this.TwoFactorEnabled)
-        {
-            return Result.Terminated(
-                code: ResultCodes.NOT_MODIFIED,
-                message: "The two-factor authentication is not enabled.");
-        }
 
         return this.ApplyEvent(@event: @event, isNew: true);
     }
@@ -308,7 +286,7 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
     protected Result PassportVerified(
         IEventDependenciesProvider dependencies,
-        IAuthenticationConfigProvider configs,
+        IAuthenticationConfiguration configs,
         PassportTypes passportType)
     {
         if (dependencies is null)
@@ -319,7 +297,7 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
                                AccountStates.CLOSED)
         {
             return Result.Terminated(
-                code: ResultCodes.INCONSISTENCY,
+                code: ResultCodes.FORBIDDEN,
                 message: "The closed or banned account is not allowed to authenticate.");
         }
 
@@ -340,12 +318,12 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
         var twoFactorAuthenticationEnd = this.LastLoginAttempt.Add(configs.TwoFactorStepsGapDuration);
 
         if (this.TwoFactorEnabled &&
-            twoFactorAuthenticationEnd <= dependencies.DateTimeService.Now() &&
+            twoFactorAuthenticationEnd <= dependencies.DateTimeService.UtcNow() &&
             passportType is PassportTypes.EMAIL or
                             PassportTypes.PHONE)
         {
             return Result.Terminated(
-                code: ResultCodes.INCONSISTENCY,
+                code: ResultCodes.FORBIDDEN,
                 message: "The user should start authentication again.");
         }
 
@@ -380,7 +358,7 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
     protected Result PassportVerificationFailed(
         IEventDependenciesProvider dependencies,
-        IAuthenticationConfigProvider configs)
+        IAuthenticationConfiguration configs)
     {
         if (dependencies is null)
         {
@@ -390,7 +368,7 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
                                AccountStates.CLOSED)
         {
             return Result.Terminated(
-                code: ResultCodes.INCONSISTENCY,
+                code: ResultCodes.FORBIDDEN,
                 message: "The closed or banned account is not allowed to authenticate.");
         }
         else if (this.FailedLoginAttemptsCounter + 1 == configs.SuspensionThreshold)
@@ -420,7 +398,7 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
     }
 
     /// <inheritdoc/>
-    protected override Result DispatchEvent(IDomainEventModel @event)
+    protected override Result DispatchEvent(IDomainEvent @event)
     {
         var result = @event switch
         {
@@ -467,15 +445,15 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
 
     private bool HandleSuspendedAccounts(
         IEventDependenciesProvider dependencies,
-        IAuthenticationConfigProvider configs,
+        IAuthenticationConfiguration configs,
         out Result result)
     {
         if (this.State is AccountStates.SUSPENDED)
         {
-            if (this.LastLoginAttempt.Add(configs.SuspensionDuration) >= dependencies.DateTimeService.Now())
+            if (this.LastLoginAttempt.Add(configs.SuspensionDuration) >= dependencies.DateTimeService.UtcNow())
             {
                 result = Result.Terminated(
-                    code: ResultCodes.INCONSISTENCY,
+                    code: ResultCodes.FORBIDDEN,
                     message: "The account is suspended.");
 
                 return false;
@@ -489,15 +467,15 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
 
     private bool HandleProtectedAccounts(
         IEventDependenciesProvider dependencies,
-        IAuthenticationConfigProvider configs,
+        IAuthenticationConfiguration configs,
         out Result result)
     {
         if (this.State is AccountStates.PROTECTED)
         {
-            if (this.LastLoginAttempt.Add(configs.ProtectionDuration) >= dependencies.DateTimeService.Now())
+            if (this.LastLoginAttempt.Add(configs.ProtectionDuration) >= dependencies.DateTimeService.UtcNow())
             {
                 result = Result.Terminated(
-                    code: ResultCodes.INCONSISTENCY,
+                    code: ResultCodes.FORBIDDEN,
                     message: "The account is protected.");
 
                 return false;
@@ -630,10 +608,10 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
         }
         else if (this.State is AccountStates.CLOSED or AccountStates.BANNED)
         {
-            return Result.Terminated(ResultCodes.INCONSISTENCY);
+            return Result.Terminated(ResultCodes.FORBIDDEN);
         }
 
-        var accountRole = this.FindAccountRole(@event.RoleKey);
+        var accountRole = this.FindActiveAccountRole(@event.RoleKey);
 
         if (accountRole is not null)
         {
@@ -661,10 +639,10 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
         }
         else if (this.State is AccountStates.CLOSED or AccountStates.BANNED)
         {
-            return Result.Terminated(ResultCodes.INCONSISTENCY);
+            return Result.Terminated(ResultCodes.FORBIDDEN);
         }
 
-        var accountRole = this.FindAccountRole(@event.RoleKey);
+        var accountRole = this.FindActiveAccountRole(@event.RoleKey);
 
         if (accountRole is null)
         {
@@ -684,7 +662,7 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
         }
         else if (this.State is AccountStates.CLOSED or AccountStates.BANNED)
         {
-            return Result.Terminated(ResultCodes.INCONSISTENCY);
+            return Result.Terminated(ResultCodes.FORBIDDEN);
         }
 
         this.TwoFactorEnabled = true;
@@ -700,7 +678,7 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
         }
         else if (this.State is AccountStates.CLOSED or AccountStates.BANNED)
         {
-            return Result.Terminated(ResultCodes.INCONSISTENCY);
+            return Result.Terminated(ResultCodes.FORBIDDEN);
         }
 
         this.TwoFactorEnabled = false;
@@ -730,7 +708,7 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
         else if (this.State is AccountStates.CLOSED or AccountStates.BANNED)
         {
             result = Result.Terminated(
-                code: ResultCodes.INCONSISTENCY,
+                code: ResultCodes.FORBIDDEN,
                 message: "You cannot change the state of closed or banned accounts.");
 
             return false;
@@ -741,8 +719,9 @@ public abstract class Account<TAggregateRootModel> : EventDrivenRootBase<long, A
         return true;
     }
 
-    private AccountRole? FindAccountRole(RoleKey roleKey)
+    private AccountRole? FindActiveAccountRole(RoleKey roleKey)
     {
-        return this.assignedRoles.FirstOrDefault(r => r.RoleKey == roleKey);
+        return this.assignedRoles.FirstOrDefault(r => r.RoleKey == roleKey &&
+                                                      r.Removed == false);
     }
 }

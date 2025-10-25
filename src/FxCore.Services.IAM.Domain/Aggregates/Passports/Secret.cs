@@ -4,9 +4,8 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Abstraction.Models;
-using FxCore.Abstraction.Services;
-using FxCore.Abstraction.Types;
+using FxCore.Abstraction.Common.Models;
+using FxCore.Abstraction.Entities;
 using FxCore.Services.IAM.Shared.Passports;
 
 namespace FxCore.Services.IAM.Domain.Aggregates.Passports;
@@ -14,14 +13,25 @@ namespace FxCore.Services.IAM.Domain.Aggregates.Passports;
 /// <summary>
 /// Defines a class for any kind of passport secrets.
 /// </summary>
-public class Secret : EntityBase<long>
+/// <typeparam name="TSecret">Type of the passport secret.</typeparam>
+public abstract class Secret<TSecret> : EntityBase<long>, ISecret
+    where TSecret : Secret<TSecret>
 {
-    private Secret()
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Secret{TSecret}"/> class.
+    /// </summary>
+    protected Secret()
         : base(id: default, removed: false)
     {
     }
 
-    private Secret(string encodedValue, DateTimeOffset expireDate, SecretTypes type)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Secret{TSecret}"/> class.
+    /// </summary>
+    /// <param name="encodedValue">See <see cref="EncodedValue"/>.</param>
+    /// <param name="expireDate">See <see cref="ExpireDate"/>.</param>
+    /// <param name="type">See <see cref="Type"/>.</param>
+    protected Secret(string encodedValue, DateTimeOffset expireDate, SecretTypes type)
         : this()
     {
         this.EncodedValue = encodedValue;
@@ -44,35 +54,12 @@ public class Secret : EntityBase<long>
     /// </summary>
     public SecretTypes Type { get; private set; } = SecretTypes.PASSWORD;
 
-    internal static Result Create(SecretTypes secretType, string encodedSecret, DateTimeOffset expireDate)
-    {
-        var newSecret = new Secret(
-            encodedValue: encodedSecret,
-            expireDate: expireDate,
-            type: secretType);
-
-        return Result.Completed(newSecret);
-    }
-
+    /// <summary>
+    /// Removes the passport secret.
+    /// </summary>
+    /// <returns>An object as type of the <see cref="Result"/>.</returns>
     internal new Result Remove()
     {
         return base.Remove();
-    }
-
-    internal Result Evaluate(
-        IDateTimeService dateTimeService,
-        string encodedSecret)
-    {
-        var matched = encodedSecret == this.EncodedValue;
-        var expired = this.ExpireDate >= dateTimeService.Now();
-
-        if (matched && !expired && !this.Removed)
-        {
-            return Result.Completed();
-        }
-
-        return Result.Terminated(
-            code: ResultCodes.AUTHENTICATION_REQUIRED,
-            message: "The secret is not matched or expired.");
     }
 }

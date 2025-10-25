@@ -4,8 +4,8 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Abstraction.Models;
-using FxCore.Abstraction.Types;
+using FxCore.Abstraction.Common.Models;
+using FxCore.Abstraction.Entities;
 using FxCore.Services.IAM.Shared.Roles;
 
 namespace FxCore.Services.IAM.Domain.Aggregates.Accounts;
@@ -21,13 +21,10 @@ public sealed class AccountRole : EntityBase<long>
     }
 
     private AccountRole(RoleKey roleKey)
-        : this()
-    {
-        this.RoleKey = roleKey;
-    }
+        : this() => this.RoleKey = roleKey;
 
     /// <summary>
-    /// Gets the key of the role assigned to the account.
+    /// Gets the aggregate key of the role assigned to the account.
     /// </summary>
     public RoleKey RoleKey { get; private set; } = new(string.Empty);
 

@@ -4,9 +4,9 @@
 // │FOR MORE INFORMATION ABOUT FXCORE, PLEASE VISIT HTTPS://GITHUB.COM/NIMAARAN/FXCORE            │
 // └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-using FxCore.Abstraction.Models;
-using FxCore.Abstraction.Services;
-using FxCore.Abstraction.Types;
+using FxCore.Abstraction.Aggregates;
+using FxCore.Abstraction.Common.Models;
+using FxCore.Abstraction.Events.Contracts;
 using FxCore.Services.IAM.Domain.Events.Passports;
 using FxCore.Services.IAM.Domain.Services;
 using FxCore.Services.IAM.Shared.Accounts;
@@ -17,14 +17,14 @@ namespace FxCore.Services.IAM.Domain.Aggregates.Passports;
 /// <summary>
 /// Defines the base class for different types of passports.
 /// </summary>
-/// <typeparam name="TAggregateRootModel">Type of the concrete passport aggregate root.</typeparam>
-public abstract class Passport<TAggregateRootModel> : EventDrivenRootBase<long, PassportKey>
-    where TAggregateRootModel : IAggregateRootModel
+/// <typeparam name="TPassport">Type of the passport.</typeparam>
+public abstract class Passport<TPassport> : EventDrivenRootBase<long, PassportKey>
+    where TPassport : Passport<TPassport>
 {
-    private readonly List<Secret> secrets = [];
+    private readonly List<ISecret> secrets = [];
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="Passport{TAggregateRootModel}"/> class.
+    /// Initializes a new instance of the <see cref="Passport{TPassport}"/> class.
     /// </summary>
     protected Passport()
         : base(
@@ -36,7 +36,7 @@ public abstract class Passport<TAggregateRootModel> : EventDrivenRootBase<long, 
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="Passport{TAggregateRootModel}"/> class.
+    /// Initializes a new instance of the <see cref="Passport{TPassport}"/> class.
     /// </summary>
     /// <param name="dependencies">
     /// An object that provides required dependencies for creating domain events.
@@ -49,7 +49,7 @@ public abstract class Passport<TAggregateRootModel> : EventDrivenRootBase<long, 
     /// <param name="result">An object as type of the <see cref="Result"/>.</param>
     protected Passport(
         IEventDependenciesProvider dependencies,
-        IPassportKeyGenerator<TAggregateRootModel> passportKeyGenerator,
+        IPassportKeyGenerator<TPassport> passportKeyGenerator,
         AccountKey accountKey,
         string identity,
         PassportTypes type,
@@ -57,7 +57,7 @@ public abstract class Passport<TAggregateRootModel> : EventDrivenRootBase<long, 
         out Result result)
         : this(
             identityKey: passportKeyGenerator.Generate(),
-            @lock: AggregateLock.Create(dependencies.DateTimeService.Now()))
+            @lock: AggregateLock.Create(dependencies.DateTimeService.UtcNow()))
     {
         var @event = new PassportIssued(
             dependencies: dependencies,
@@ -102,36 +102,117 @@ public abstract class Passport<TAggregateRootModel> : EventDrivenRootBase<long, 
     /// <summary>
     /// Gets the collection of secrets associated with the passport.
     /// </summary>
-    public IReadOnlyCollection<Secret> Secrets => this.secrets.AsReadOnly();
+    public IReadOnlyCollection<ISecret> Secrets => this.secrets.AsReadOnly();
+
+    /// <summary>
+    /// Creates a new secret object by using provided secret data.
+    /// </summary>
+    /// <typeparam name="TSecret">Type of desired passport secret type.</typeparam>
+    /// <param name="dependencies">See <see cref="IEventDependenciesProvider"/>.</param>
+    /// <param name="secretBuilder">A secret builder.</param>
+    /// <param name="secret">A raw data that should be used for creting secret object.</param>
+    /// <returns>An object as type of the <see cref="Result"/>.</returns>
+    protected Result SetSecret<TSecret>(
+        IEventDependenciesProvider dependencies,
+        ISecretBuilder<TSecret> secretBuilder,
+        string secret)
+        where TSecret : Secret<TSecret>
+    {
+        if (dependencies is null ||
+            secretBuilder is null ||
+            string.IsNullOrEmpty(secret))
+        {
+            return Result.Terminated(ResultCodes.BAD_REQUEST);
+        }
+
+        var secretObject = secretBuilder.Build(secret);
+
+        if (!this.GetTSecretType<TSecret>(out SecretTypes? secretType))
+        {
+            return Result.Terminated(ResultCodes.CONFLICT);
+        }
+
+        var @event = new PassportSecretSet(
+            dependencies: dependencies,
+            passportKey: this.Key,
+            secretType: secretType!.Value,
+            expireDate: DateTimeOffset.Now,
+            secret: secretObject);
+
+        return this.ApplyEvent(@event, isNew: true);
+    }
+
+    /// <summary>
+    /// Creates a new secret object by using a system generated secret data.
+    /// </summary>
+    /// <typeparam name="TSecret">Type of desired passport secret type.</typeparam>
+    /// <param name="dependencies">See <see cref="IEventDependenciesProvider"/>.</param>
+    /// <param name="secretGenerator">A secret data generator.</param>
+    /// <param name="secretBuilder">A secret builder.</param>
+    /// <param name="secret">A raw data that should be used for creting secret object.</param>
+    /// <returns>An object as type of the <see cref="Result"/>.</returns>
+    protected Result GenerateSecret<TSecret>(
+       IEventDependenciesProvider dependencies,
+       ISecretGenerator<TSecret> secretGenerator,
+       ISecretBuilder<TSecret> secretBuilder,
+       out string secret)
+       where TSecret : Secret<TSecret>
+    {
+        secret = string.Empty;
+        if (dependencies is null ||
+            secretGenerator is null ||
+            secretBuilder is null)
+        {
+            return Result.Terminated(ResultCodes.BAD_REQUEST);
+        }
+
+        if (!this.GetTSecretType<TSecret>(out SecretTypes? secretType))
+        {
+            return Result.Terminated(ResultCodes.CONFLICT);
+        }
+
+        secret = secretGenerator.Generate();
+        var generatedSecret = secretBuilder.Build(secret);
+
+        var @event = new PassportSecretGenerated(
+            dependencies: dependencies,
+            passportKey: this.Key,
+            secretType: secretType!.Value,
+            expireDate: DateTimeOffset.Now,
+            generatedSecret: generatedSecret);
+
+        return this.ApplyEvent(@event, isNew: true);
+    }
 
     /// <summary>
     /// Authenticates the passport by using the provided secret.
     /// </summary>
-    /// <param name="dependencies">
-    /// An object that provides required dependencies for creating domain events.
-    /// </param>
-    /// <param name="secretEncoder">A passport secret encoder.</param>
+    /// <typeparam name="TSecret">Type of desired passport secret type.</typeparam>
+    /// <param name="dependencies">See <see cref="IEventDependenciesProvider"/>.</param>
+    /// <param name="secretEvaluator">A passport secret evaluator.</param>
     /// <param name="secret">A secret value that should be used to authenticate user.</param>
-    /// <param name="secretType">The secret type.</param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
-    protected Result Verify(
+    protected Result Verify<TSecret>(
         IEventDependenciesProvider dependencies,
-        ISecretEncoder secretEncoder,
-        string secret,
-        SecretTypes secretType)
+        ISecretEvaluator<TSecret> secretEvaluator,
+        string secret)
+        where TSecret : Secret<TSecret>
     {
         Result result;
 
         var secretMatched = false;
-        var encodedSecret = secretEncoder.Encode(secret);
+
+        if (!this.GetTSecretType<TSecret>(out SecretTypes? secretType))
+        {
+            return Result.Terminated(ResultCodes.CONFLICT);
+        }
 
         foreach (var item in this.secrets)
         {
-            var evaluationResult = item.Evaluate(
-                dependencies.DateTimeService,
-                encodedSecret);
-
-            if (evaluationResult.State == ResultStates.COMPLETED)
+            if (secretEvaluator.Evaluate(
+                secret,
+                item.EncodedValue,
+                item.ExpireDate))
             {
                 secretMatched = true;
                 break;
@@ -144,7 +225,7 @@ public abstract class Passport<TAggregateRootModel> : EventDrivenRootBase<long, 
                 dependencies: dependencies,
                 passportKey: this.Key,
                 passportType: this.Type,
-                secretType: secretType);
+                secretType: secretType!.Value);
 
             result = this.ApplyEvent(@event: @event, isNew: true);
         }
@@ -161,40 +242,8 @@ public abstract class Passport<TAggregateRootModel> : EventDrivenRootBase<long, 
         return result;
     }
 
-    /// <summary>
-    /// Changes the passport secret to a new value.
-    /// </summary>
-    /// <param name="dependencies">
-    /// An object that provides required dependencies for creating domain events.
-    /// </param>
-    /// <param name="configs">An object that provides authentication configurations.</param>
-    /// <param name="secretEncoder">A passport secret encrypter.</param>
-    /// <param name="newSecret">A new secret that should be used to authenticate user.</param>
-    /// <param name="secretType">The new secret type.</param>
-    /// <returns>An object as type of the <see cref="Result"/>.</returns>
-    protected Result SetSecret(
-        IEventDependenciesProvider dependencies,
-        IAuthenticationConfigProvider configs,
-        ISecretEncoder secretEncoder,
-        string newSecret,
-        SecretTypes secretType)
-    {
-        var encodedSecret = secretEncoder.Encode(newSecret);
-        var lifetime = secretType == SecretTypes.PASSWORD ? configs.PasswordLifetime :
-                                                            configs.PasscodeLifetime;
-
-        var @event = new PassportSecretSet(
-            dependencies: dependencies,
-            passportKey: this.Key,
-            secretType: secretType,
-            encodedSecret: encodedSecret,
-            expireDate: dependencies.DateTimeService.Now().Add(lifetime));
-
-        return this.ApplyEvent(@event: @event, isNew: true);
-    }
-
     /// <inheritdoc/>
-    protected override Result DispatchEvent(IDomainEventModel @event)
+    protected override Result DispatchEvent(IDomainEvent @event)
     {
         var result = @event switch
         {
@@ -202,6 +251,7 @@ public abstract class Passport<TAggregateRootModel> : EventDrivenRootBase<long, 
             PassportVerificationFailed _ => this.OnPassportVerificationFailed(),
             PassportVerified e => this.OnPassportVerified(e),
             PassportSecretSet e => this.OnPassportSecretSet(e),
+            PassportSecretGenerated e => this.OnPassportSecretGenerated(e),
 
             _ => base.DispatchEvent(@event),
         };
@@ -211,12 +261,15 @@ public abstract class Passport<TAggregateRootModel> : EventDrivenRootBase<long, 
 
     private Result OnPassportVerificationFailed()
     {
-        return Result.Terminated(ResultCodes.AUTHENTICATION_REQUIRED, "Passport verification failed.");
+        return Result.Terminated(ResultCodes.UNAUTHORIZED, "Passport verification failed.");
     }
 
     private Result OnPassportVerified(PassportVerified @event)
     {
-        this.RemoveSecret(@event.SecretType);
+        if (@event.SecretType == SecretTypes.PASSCODE)
+        {
+            this.RemoveSecret<Passcode>(@event.SecretType);
+        }
 
         return Result.Completed();
     }
@@ -233,30 +286,48 @@ public abstract class Passport<TAggregateRootModel> : EventDrivenRootBase<long, 
 
     private Result OnPassportSecretSet(PassportSecretSet @event)
     {
-        var secretResult = Secret.Create(
-            secretType: @event.SecretType,
-            encodedSecret: @event.EncodedSecret,
-            expireDate: @event.ExpireDate);
+        var secretResult = @event.Secret;
 
-        if (secretResult.State == ResultStates.COMPLETED &&
-            secretResult.TryGetOutcome<Secret>(out var outcome))
+        if (@event.SecretType == SecretTypes.PASSWORD)
         {
-            this.RemoveSecret(@event.SecretType);
-
-            this.secrets.Add(outcome!);
-            return Result.Completed();
+            this.RemoveSecret<Password>(@event.SecretType);
+        }
+        else if (@event.SecretType == SecretTypes.PASSCODE)
+        {
+            this.RemoveSecret<Passcode>(@event.SecretType);
         }
 
-        return Result.Terminated(ResultCodes.INCONSISTENCY, "Secret setting not completed.");
+        this.secrets.Add(secretResult);
+
+        return Result.Completed();
     }
 
-    private Result RemoveSecret(SecretTypes secretType)
+    private Result OnPassportSecretGenerated(PassportSecretGenerated @event)
+    {
+        var secretResult = @event.GeneratedSecret;
+
+        if (@event.SecretType == SecretTypes.PASSWORD)
+        {
+            this.RemoveSecret<Password>(@event.SecretType);
+        }
+        else if (@event.SecretType == SecretTypes.PASSCODE)
+        {
+            this.RemoveSecret<Passcode>(@event.SecretType);
+        }
+
+        this.secrets.Add(secretResult);
+
+        return Result.Completed();
+    }
+
+    private Result RemoveSecret<TSecret>(SecretTypes secretType)
+        where TSecret : Secret<TSecret>
     {
         var secret = this.secrets.FirstOrDefault(s => s.Type == secretType);
 
         if (secret is not null)
         {
-            var removeResult = secret.Remove();
+            var removeResult = ((Secret<TSecret>)secret).Remove();
             if (removeResult.State == ResultStates.COMPLETED)
             {
                 return Result.Completed();
@@ -268,5 +339,25 @@ public abstract class Passport<TAggregateRootModel> : EventDrivenRootBase<long, 
         return Result.Terminated(
             code: ResultCodes.NOT_FOUND,
             message: "The specified secret type was not found.");
+    }
+
+    private bool GetTSecretType<TSecret>(out SecretTypes? type)
+        where TSecret : Secret<TSecret>
+    {
+        var secretType = typeof(TSecret);
+        type = null;
+
+        if (secretType == typeof(Password))
+        {
+            type = SecretTypes.PASSWORD;
+            return true;
+        }
+        else if (secretType == typeof(Passcode))
+        {
+            type = SecretTypes.PASSCODE;
+            return true;
+        }
+
+        return true;
     }
 }

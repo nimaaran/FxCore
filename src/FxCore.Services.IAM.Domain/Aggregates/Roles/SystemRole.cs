@@ -7,59 +7,58 @@
 using FxCore.Abstraction.Common.Models;
 using FxCore.Abstraction.Events.Contracts;
 using FxCore.Services.IAM.Domain.Services;
-using FxCore.Services.IAM.Shared.Accounts;
-using FxCore.Services.IAM.Shared.Passports;
+using FxCore.Services.IAM.Shared.Roles;
 
-namespace FxCore.Services.IAM.Domain.Aggregates.Passports;
+namespace FxCore.Services.IAM.Domain.Aggregates.Roles;
 
 /// <summary>
-/// Defines an entity model for email passports.
+/// Implements a concrete aggregate root class for system roles.
 /// </summary>
-public sealed class EmailPassport : Passport<EmailPassport>
+public sealed class SystemRole : Role<SystemRole>
 {
-    private EmailPassport()
+    private SystemRole()
         : base()
     {
     }
 
-    private EmailPassport(
+    private SystemRole(
         IEventDependenciesProvider dependencies,
-        IPassportKeyGenerator<EmailPassport> aggregateKeyGenerator,
-        AccountKey accountKey,
-        string identity,
+        IRoleKeyGenerator<SystemRole> roleKeyGenerator,
+        string title,
         out Result result)
         : base(
             dependencies,
-            aggregateKeyGenerator,
-            accountKey,
-            identity,
-            PassportTypes.EMAIL,
-            PassportStates.PENDING,
+            roleKeyGenerator,
+            title,
+            RoleTypes.SYSTEM_DEFINED,
+            RoleStates.DISABLED,
             out result)
     {
     }
 
     /// <summary>
-    /// Creates a new passport that will use an email address as the identity for authentication.
+    /// Defines a new system role.
     /// </summary>
-    /// <param name="dependencies">
-    /// An object that provides required dependencies for creating domain events.
-    /// </param>
-    /// <param name="passportKeyGenerator">A passport key generator.</param>
-    /// <param name="accountKey">The relevant account key.</param>
-    /// <param name="identity">The passport identity (an email address).</param>
+    /// <param name="dependencies">See <see cref="IEventDependenciesProvider"/>.</param>
+    /// <param name="roleKeyGenerator">A role key generator service.</param>
+    /// <param name="title">See <see cref="Role{TRole}.Title"/>.</param>
     /// <returns>An object as type of the <see cref="Result"/>.</returns>
-    public static Result Register(
+    public static Result Define(
         IEventDependenciesProvider dependencies,
-        IPassportKeyGenerator<EmailPassport> passportKeyGenerator,
-        AccountKey accountKey,
-        string identity)
+        IRoleKeyGenerator<SystemRole> roleKeyGenerator,
+        string title)
     {
-        _ = new EmailPassport(
+        if (dependencies is null ||
+            roleKeyGenerator is null ||
+            string.IsNullOrWhiteSpace(title))
+        {
+            return Result.Terminated(ResultCodes.BAD_REQUEST);
+        }
+
+        _ = new SystemRole(
             dependencies,
-            passportKeyGenerator,
-            accountKey,
-            identity,
+            roleKeyGenerator,
+            title,
             out Result result);
 
         return result;

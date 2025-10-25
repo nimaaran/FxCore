@@ -11,7 +11,7 @@ namespace FxCore.Abstraction.Events;
 /// <summary>
 /// As a base class, it will be used for implementing all domain events.
 /// </summary>
-public abstract record class DomainEventBase : EventBase
+public abstract record class DomainEventBase : EventBase, IDomainEvent
 {
     /// <inheritdoc/>
     protected DomainEventBase(IEventDependenciesProvider dependencies)

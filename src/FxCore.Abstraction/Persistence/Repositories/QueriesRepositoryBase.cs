@@ -20,7 +20,7 @@ namespace FxCore.Abstraction.Persistence.Repositories;
 /// <param name="dataContext">A data context that provides access to the data source.</param>
 /// <param name="queryBuilder">A query builder object for loading records.</param>
 /// <typeparam name="TModel">Type of the data model.</typeparam>
-public abstract class QueryRepositoryBase<TModel>(
+public abstract class QueriesRepositoryBase<TModel>(
     IDataContext dataContext,
     IQueryBuilder queryBuilder) :
     IRecordReaderRepository<TModel>,

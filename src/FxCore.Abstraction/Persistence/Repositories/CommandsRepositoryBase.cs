@@ -19,7 +19,7 @@ namespace FxCore.Abstraction.Persistence.Repositories;
 /// <param name="dataContext">A data context that provides access to the data source.</param>
 /// <param name="queryBuilder">A query builder object for loading a record.</param>
 /// <typeparam name="TEntity">Type of the entity.</typeparam>
-public abstract class CommandRepositoryBase<TEntity>(
+public abstract class CommandsRepositoryBase<TEntity>(
     IDataContext dataContext,
     IQueryBuilder queryBuilder) :
     IRecordCreatorRepository<TEntity>,
